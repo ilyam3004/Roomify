@@ -1,0 +1,11 @@
+{
+  "version": 2,
+  "dgSpecHash": "Ipfxw0xIOl6lgCuTt6AqanE8ws+eBQSOhcY3s7relKvj48D1YRUB/qNoaXDesKH1ZvmNAycQggSEvd0ADjExyA==",
+  "success": true,
+  "projectFilePath": "D:\\Learning\\Projects\\ChatAppServer\\ChatAppServer.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\ilyam\\.nuget\\packages\\newtonsoft.json\\12.0.1\\newtonsoft.json.12.0.1.nupkg.sha512",
+    "C:\\Users\\ilyam\\.nuget\\packages\\newtonsoft.json.bson\\1.0.2\\newtonsoft.json.bson.1.0.2.nupkg.sha512"
+  ],
+  "logs": []
+}
