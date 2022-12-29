@@ -37,9 +37,9 @@ public class ChatHub : Hub
             request.Date,
             request.FromUser);
         
-        await Clients.Groups().SendAsync("ReceiveMessage", message, CancellationToken.None);
-        Console.WriteLine($"Message sent to from connection: {Context.ConnectionId}" +
-                            $"\nMessage: {text}");
+        // await Clients.Groups().SendAsync("ReceiveMessage", message, CancellationToken.None);
+        // Console.WriteLine($"Message sent to from connection: {Context.ConnectionId}" +
+        //                     $"\nMessage");
     }
 
 // public async Task JoinRoom()
