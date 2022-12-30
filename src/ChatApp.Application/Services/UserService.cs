@@ -23,13 +23,22 @@ public class UserService : IUserService
             user.RoomId);
     }
 
-    public async Task<UserResponse> AddUser(string username, string connectionId, string roomId)
+    public async Task<UserResponse> AddUser(string username, string roomName, string roomId)
     {
+        if (await _userRepository.UserExists(username))
+        {
+            //TODO ADD ERROR HANDLING BY MIDDLEWARE
+        }
+        if(!await _userRepository.RoomExists(roomName))
+        {
+            await _userRepository.AddRoom(roomName);
+        }
+
         var dbUser = await _userRepository.AddUser(new User
         {
             UserId = Guid.NewGuid().ToString(),
             Username = username,
-            ConnectionId = connectionId,
+            ConnectionId = roomName,
             RoomId = roomId
         });
 
