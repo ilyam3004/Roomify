@@ -39,7 +39,7 @@ public class MessageService : IMessageService
         throw new NotImplementedException();
     }
 
-    public async Task RemoveAllRoomMessages(string roomId)
+    public async Task RemoveAllRoomMessages(string roomName)
     {
         throw new NotImplementedException();
     }
