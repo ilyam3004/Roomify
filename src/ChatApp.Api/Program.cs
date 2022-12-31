@@ -1,6 +1,6 @@
+using ChatApp.Api.Hubs;
 using ChatApp.Application;
 using ChatApp.Infrastructure;
-using ChatApp.Api.Hubs;
 
 var builder = WebApplication.CreateBuilder(args);
 {
@@ -25,6 +25,5 @@ var app = builder.Build();
         .AllowAnyMethod()
         .AllowCredentials());
     app.MapHub<ChatHub>("/chatHub");
-    app.Run();
     app.Run();
 }
