@@ -1,6 +1,6 @@
 ﻿using ChatApp.Domain.Entities;
 
-namespace ChatApp.Application.Models;
+namespace ChatApp.Application.Models.Responses;
 
 public record RoomResponse(
     string RoomId,

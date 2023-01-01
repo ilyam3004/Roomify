@@ -108,4 +108,5 @@ D:\Learning\Projects\ChatApp\src\ChatApp.Api\bin\Debug\net7.0\FluentValidation.d
 D:\Learning\Projects\ChatApp\src\ChatApp.Api\bin\Debug\net7.0\FluentValidation.AspNetCore.dll
 D:\Learning\Projects\ChatApp\src\ChatApp.Api\bin\Debug\net7.0\FluentValidation.DependencyInjectionExtensions.dll
 D:\Learning\Projects\ChatApp\src\ChatApp.Api\obj\Debug\net7.0\ChatApp.Api.MvcApplicationPartsAssemblyInfo.cs
-D:\Learning\Projects\ChatApp\src\ChatApp.Api\bin\Debug\net7.0\LanguageExt.Core.dll
+D:\Learning\Projects\ChatApp\src\ChatApp.Api\bin\Debug\net7.0\FluentResults.dll
+D:\Learning\Projects\ChatApp\src\ChatApp.Api\bin\Debug\net7.0\ErrorOr.dll

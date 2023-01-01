@@ -126,10 +126,6 @@
               "target": "Package",
               "version": "[11.2.2, )"
             },
-            "LanguageExt.Core": {
-              "target": "Package",
-              "version": "[4.4.0, )"
-            },
             "Microsoft.Extensions.DependencyInjection.Abstractions": {
               "target": "Package",
               "version": "[7.0.0, )"
@@ -241,6 +237,16 @@
       "frameworks": {
         "net7.0": {
           "targetAlias": "net7.0",
+          "dependencies": {
+            "ErrorOr": {
+              "target": "Package",
+              "version": "[1.2.1, )"
+            },
+            "FluentResults": {
+              "target": "Package",
+              "version": "[3.15.1, )"
+            }
+          },
           "imports": [
             "net461",
             "net462",
