@@ -1,9 +1,11 @@
-using ChatApp.Application.Models;
+using ChatApp.Application.Models.Requests;
+using ChatApp.Application.Models.Responses;
+using ErrorOr;
 
 namespace ChatApp.Application.Services;
 
 public interface IUserService
 {
     Task<UserResponse> GetUserById(string userId);
-    Task<UserResponse> AddUser(string username, string roomName, string connectionId);
+    Task<ErrorOr<UserResponse>> AddUser(CreateUserRequest request);
 }

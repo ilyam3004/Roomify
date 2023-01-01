@@ -1,4 +1,4 @@
-using ChatApp.Application.Models;
+using ChatApp.Application.Models.Responses;
 
 namespace ChatApp.Application.Services;
 public interface IMessageService

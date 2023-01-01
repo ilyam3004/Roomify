@@ -1,5 +1,5 @@
 using ChatApp.Application.Common.Interfaces.Persistence;
-using ChatApp.Application.Models;
+using ChatApp.Application.Models.Responses;
 using ChatApp.Domain.Entities;
 
 namespace ChatApp.Application.Services;

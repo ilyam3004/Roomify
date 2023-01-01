@@ -17,9 +17,10 @@ public class UserRepository : IUserRepository
 
     public async Task<User> AddUser(User user)
     {
-        var query = "INSERT INTO User (UserId, Username, ConnectionId, RoomId) VALUES (@UserId, @Username, @ConnectionId, @RoomId)";
-
+        var query = "INSERT INTO [User] (UserId, Username, ConnectionId, RoomId) VALUES (@UserId, @Username, @ConnectionId, @RoomId)";
+        
         var parameters = new DynamicParameters();
+        
         parameters.Add("UserId", user.UserId, DbType.String);
         parameters.Add("Username", user.Username, DbType.String);
         parameters.Add("ConnectionId", user.ConnectionId, DbType.String);
@@ -42,16 +43,17 @@ public class UserRepository : IUserRepository
         using (var connection = _dbContext.CreateConnection())
         {
             var user = await connection.QueryFirstOrDefaultAsync<User>(query, new { userId });
-            if (user is null)
-            {
-                throw new NullReferenceException();
-            }
             return user;
         }
     }
 
-    public async Task<Room> AddRoom(string roomName)
+    public async Task<Room> CreateRoomIfNotExists(string roomName)
     {
+        if (await RoomExists(roomName))
+        {
+            return await GetRoomByRoomName(roomName);
+        }
+
         string query = "INSERT INTO Room (RoomId, RoomName) VALUES (@RoomId, @RoomName)";
 
         var parameters = new DynamicParameters();
@@ -59,7 +61,7 @@ public class UserRepository : IUserRepository
         var roomId = Guid.NewGuid();
         
         parameters.Add("RoomId", roomId.ToString(), DbType.String);
-        parameters.Add("RoomId", roomName, DbType.String);
+        parameters.Add("RoomName", roomName, DbType.String);
 
         using (var connection = _dbContext.CreateConnection())
         {
@@ -103,6 +105,17 @@ public class UserRepository : IUserRepository
         {
             int count = await connection.QueryFirstOrDefaultAsync<int>(query, new { roomName });
             return count != 0;
+        }
+    }
+
+    public async Task<Room> GetRoomByRoomName(string roomName)
+    {
+        var query = "SELECT * FROM Room WHERE RoomName = @RoomName";
+
+        using (var connection = _dbContext.CreateConnection())
+        {
+            Room room = await connection.QueryFirstOrDefaultAsync<Room>(query, new { roomName });
+            return room;
         }
     }
 }

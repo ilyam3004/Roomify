@@ -1,15 +1,22 @@
 using ChatApp.Application.Common.Interfaces.Persistence;
-using ChatApp.Application.Models;
+using ChatApp.Application.Models.Requests;
+using ChatApp.Application.Models.Responses;
+using ChatApp.Domain.Common.Errors;
 using ChatApp.Domain.Entities;
+using FluentValidation;
+using ErrorOr;
+using FluentValidation.Results;
 
 namespace ChatApp.Application.Services;
 
 public class UserService : IUserService
 {
+    private readonly IValidator<CreateUserRequest> _validator;
     private readonly IUserRepository _userRepository;
 
-    public UserService(IUserRepository userRepository)
+    public UserService(IUserRepository userRepository, IValidator<CreateUserRequest> validator)
     {
+        _validator = validator;
         _userRepository = userRepository;
     }
 
@@ -23,29 +30,42 @@ public class UserService : IUserService
             user.RoomId);
     }
 
-    public async Task<UserResponse> AddUser(string username, string roomName, string roomId)
+    public async Task<ErrorOr<UserResponse>> AddUser(CreateUserRequest request)
     {
-        if (await _userRepository.UserExists(username))
+        //TODO CHANGE IN THE REPOSITORY IF USER EXISTS IN THE CURRENT ROOM NOT IN DATABASE
+        if (await _userRepository.UserExists(request.Username))
         {
-            //TODO ADD ERROR HANDLING BY MIDDLEWARE
+            return Errors.User.DuplicateUsername;
         }
-        if(!await _userRepository.RoomExists(roomName))
+        
+        var room = await _userRepository.CreateRoomIfNotExists(request.RoomName);
+        
+        var validateResult = await _validator.ValidateAsync(request);
+        if (validateResult.IsValid)
         {
-            await _userRepository.AddRoom(roomName);
+            var dbUser = await _userRepository.AddUser(new User
+            {
+                UserId = Guid.NewGuid().ToString(),
+                Username = request.Username,
+                RoomId = room.RoomId,
+                ConnectionId = request.ConnectionId
+            });
+
+            return new UserResponse(
+                dbUser.UserId,
+                dbUser.Username,
+                dbUser.ConnectionId,
+                dbUser.RoomId);
         }
+        
+        return ConvertValidationErrorToError(validateResult.Errors);
+    }
 
-        var dbUser = await _userRepository.AddUser(new User
-        {
-            UserId = Guid.NewGuid().ToString(),
-            Username = username,
-            ConnectionId = roomName,
-            RoomId = roomId
-        });
-
-        return new UserResponse(
-            dbUser.UserId,
-            dbUser.Username,
-            dbUser.ConnectionId,
-            dbUser.RoomId);
+    private List<Error> ConvertValidationErrorToError(List<ValidationFailure> failures)
+    {
+        return failures.ConvertAll(
+            validationFaliure => Error.Validation(
+                validationFaliure.PropertyName,
+                validationFaliure.ErrorMessage));
     }
 }

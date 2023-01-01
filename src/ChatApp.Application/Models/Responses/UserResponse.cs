@@ -1,4 +1,4 @@
-namespace ChatApp.Application.Models;
+namespace ChatApp.Application.Models.Responses;
 
 public record UserResponse(
     string UserId,
