@@ -19,7 +19,7 @@ public class UserController : ApiController
     [HttpPost("createUser")]
     public async Task<IActionResult> CreateUser(UserRequest request)
     {
-        ErrorOr<UserResponse> result = await _userService.AddUser(
+        ErrorOr<UserResponse> result = await _userService.AddUserToRoom(
             new CreateUserRequest(
                 request.Username, 
                 request.ConnectionId, 
