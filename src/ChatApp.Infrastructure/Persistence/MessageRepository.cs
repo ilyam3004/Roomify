@@ -36,14 +36,24 @@ public class MessageRepository : IMessageRepository
         }
 
         var dbMessage = await GetMessageById(message.MessageId);
-
-        //ADD ERROR HANDLING
+        
         return dbMessage;
     }
 
-    public async Task RemoveMessageById(string messageId)
+    public async Task<bool> RemoveMessageById(string messageId)
     {
-        throw new NotImplementedException();
+        var query = "DELETE FROM Message WHERE MessageId = @MessageId";
+
+        using (var connection = _dbContext.CreateConnection())
+        {
+            await connection.ExecuteAsync(query, new { MessageId = messageId });
+            if (await MessageExists(messageId))
+            {
+                return false;
+            }
+
+            return true;
+        }
     }
 
     public async Task<Message> GetMessageById(string messageId)
@@ -57,8 +67,25 @@ public class MessageRepository : IMessageRepository
         }
     }
 
-    public Task RemoveAllMessagesFromRoom(string roomId)
+    public async Task<bool> MessageExists(string messageId)
     {
-        throw new NotImplementedException();
+        var query = "SELECT COUNT(*) FROM Message WHERE MessageId = @MessageId";
+
+        using (var connection = _dbContext.CreateConnection())
+        {
+            int count = await connection.QueryFirstOrDefaultAsync<int>(query, new { messageId });
+            return count != 0;
+        }
+    }
+
+    public Task<bool> RemoveAllMessagesFromRoom(string roomId)
+    {
+        var query = "SELECT COUNT(*) FROM Message WHERE RoomId = @RoomId";
+
+        using (var connection = _dbContext.CreateConnection())
+        {
+            int count = await connection.QueryFirstOrDefaultAsync<int>(query, new { messageId });
+            return count != 0;
+        }
     }
 }
