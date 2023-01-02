@@ -1,7 +1,8 @@
+using ChatApp.Application.Common.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
 using ChatApp.Application.Services;
 using FluentValidation;
-using ChatApp.Application.Common.Interfaces;
+
 
 namespace ChatApp.Application;
 

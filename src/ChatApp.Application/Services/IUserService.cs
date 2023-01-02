@@ -7,5 +7,5 @@ namespace ChatApp.Application.Services;
 public interface IUserService
 {
     Task<UserResponse> GetUserById(string userId);
-    Task<ErrorOr<UserResponse>> AddUser(CreateUserRequest request);
+    Task<ErrorOr<UserResponse>> AddUserToRoom(CreateUserRequest request);
 }

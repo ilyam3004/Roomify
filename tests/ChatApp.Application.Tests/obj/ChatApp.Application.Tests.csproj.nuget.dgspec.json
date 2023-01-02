@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "D:\\Learning\\Projects\\chatapp\\tests\\ChatApp.Application.Tests\\ChatApp.Application.Tests.csproj": {}
+    "D:\\Learning\\Projects\\ChatApp\\tests\\ChatApp.Application.Tests\\ChatApp.Application.Tests.csproj": {}
   },
   "projects": {
-    "D:\\Learning\\Projects\\chatapp\\src\\ChatApp.Application\\ChatApp.Application.csproj": {
+    "D:\\Learning\\Projects\\ChatApp\\src\\ChatApp.Application\\ChatApp.Application.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "D:\\Learning\\Projects\\chatapp\\src\\ChatApp.Application\\ChatApp.Application.csproj",
+        "projectUniqueName": "D:\\Learning\\Projects\\ChatApp\\src\\ChatApp.Application\\ChatApp.Application.csproj",
         "projectName": "ChatApp.Application",
-        "projectPath": "D:\\Learning\\Projects\\chatapp\\src\\ChatApp.Application\\ChatApp.Application.csproj",
+        "projectPath": "D:\\Learning\\Projects\\ChatApp\\src\\ChatApp.Application\\ChatApp.Application.csproj",
         "packagesPath": "C:\\Users\\ilyam\\.nuget\\packages\\",
-        "outputPath": "D:\\Learning\\Projects\\chatapp\\src\\ChatApp.Application\\obj\\",
+        "outputPath": "D:\\Learning\\Projects\\ChatApp\\src\\ChatApp.Application\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\ilyam\\AppData\\Roaming\\NuGet\\NuGet.Config"
@@ -26,8 +26,8 @@
           "net7.0": {
             "targetAlias": "net7.0",
             "projectReferences": {
-              "D:\\Learning\\Projects\\chatapp\\src\\ChatApp.Domain\\ChatApp.Domain.csproj": {
-                "projectPath": "D:\\Learning\\Projects\\chatapp\\src\\ChatApp.Domain\\ChatApp.Domain.csproj"
+              "D:\\Learning\\Projects\\ChatApp\\src\\ChatApp.Domain\\ChatApp.Domain.csproj": {
+                "projectPath": "D:\\Learning\\Projects\\ChatApp\\src\\ChatApp.Domain\\ChatApp.Domain.csproj"
               }
             }
           }
@@ -42,6 +42,14 @@
         "net7.0": {
           "targetAlias": "net7.0",
           "dependencies": {
+            "FluentValidation": {
+              "target": "Package",
+              "version": "[11.4.0, )"
+            },
+            "FluentValidation.AspNetCore": {
+              "target": "Package",
+              "version": "[11.2.2, )"
+            },
             "Microsoft.Extensions.DependencyInjection.Abstractions": {
               "target": "Package",
               "version": "[7.0.0, )"
@@ -67,14 +75,14 @@
         }
       }
     },
-    "D:\\Learning\\Projects\\chatapp\\src\\ChatApp.Domain\\ChatApp.Domain.csproj": {
+    "D:\\Learning\\Projects\\ChatApp\\src\\ChatApp.Domain\\ChatApp.Domain.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "D:\\Learning\\Projects\\chatapp\\src\\ChatApp.Domain\\ChatApp.Domain.csproj",
+        "projectUniqueName": "D:\\Learning\\Projects\\ChatApp\\src\\ChatApp.Domain\\ChatApp.Domain.csproj",
         "projectName": "ChatApp.Domain",
-        "projectPath": "D:\\Learning\\Projects\\chatapp\\src\\ChatApp.Domain\\ChatApp.Domain.csproj",
+        "projectPath": "D:\\Learning\\Projects\\ChatApp\\src\\ChatApp.Domain\\ChatApp.Domain.csproj",
         "packagesPath": "C:\\Users\\ilyam\\.nuget\\packages\\",
-        "outputPath": "D:\\Learning\\Projects\\chatapp\\src\\ChatApp.Domain\\obj\\",
+        "outputPath": "D:\\Learning\\Projects\\ChatApp\\src\\ChatApp.Domain\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\ilyam\\AppData\\Roaming\\NuGet\\NuGet.Config"
@@ -100,6 +108,16 @@
       "frameworks": {
         "net7.0": {
           "targetAlias": "net7.0",
+          "dependencies": {
+            "ErrorOr": {
+              "target": "Package",
+              "version": "[1.2.1, )"
+            },
+            "FluentResults": {
+              "target": "Package",
+              "version": "[3.15.1, )"
+            }
+          },
           "imports": [
             "net461",
             "net462",
@@ -120,14 +138,14 @@
         }
       }
     },
-    "D:\\Learning\\Projects\\chatapp\\tests\\ChatApp.Application.Tests\\ChatApp.Application.Tests.csproj": {
+    "D:\\Learning\\Projects\\ChatApp\\src\\ChatApp.Infrastructure\\ChatApp.Infrastructure.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "D:\\Learning\\Projects\\chatapp\\tests\\ChatApp.Application.Tests\\ChatApp.Application.Tests.csproj",
-        "projectName": "ChatApp.Application.Tests",
-        "projectPath": "D:\\Learning\\Projects\\chatapp\\tests\\ChatApp.Application.Tests\\ChatApp.Application.Tests.csproj",
+        "projectUniqueName": "D:\\Learning\\Projects\\ChatApp\\src\\ChatApp.Infrastructure\\ChatApp.Infrastructure.csproj",
+        "projectName": "ChatApp.Infrastructure",
+        "projectPath": "D:\\Learning\\Projects\\ChatApp\\src\\ChatApp.Infrastructure\\ChatApp.Infrastructure.csproj",
         "packagesPath": "C:\\Users\\ilyam\\.nuget\\packages\\",
-        "outputPath": "D:\\Learning\\Projects\\chatapp\\tests\\ChatApp.Application.Tests\\obj\\",
+        "outputPath": "D:\\Learning\\Projects\\ChatApp\\src\\ChatApp.Infrastructure\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\ilyam\\AppData\\Roaming\\NuGet\\NuGet.Config"
@@ -142,8 +160,86 @@
           "net7.0": {
             "targetAlias": "net7.0",
             "projectReferences": {
-              "D:\\Learning\\Projects\\chatapp\\src\\ChatApp.Application\\ChatApp.Application.csproj": {
-                "projectPath": "D:\\Learning\\Projects\\chatapp\\src\\ChatApp.Application\\ChatApp.Application.csproj"
+              "D:\\Learning\\Projects\\ChatApp\\src\\ChatApp.Application\\ChatApp.Application.csproj": {
+                "projectPath": "D:\\Learning\\Projects\\ChatApp\\src\\ChatApp.Application\\ChatApp.Application.csproj"
+              }
+            }
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        }
+      },
+      "frameworks": {
+        "net7.0": {
+          "targetAlias": "net7.0",
+          "dependencies": {
+            "Dapper": {
+              "target": "Package",
+              "version": "[2.0.123, )"
+            },
+            "Microsoft.Data.SqlClient": {
+              "target": "Package",
+              "version": "[5.0.1, )"
+            },
+            "Microsoft.Extensions.Configuration": {
+              "target": "Package",
+              "version": "[7.0.0, )"
+            },
+            "Microsoft.Extensions.DependencyInjection.Abstractions": {
+              "target": "Package",
+              "version": "[7.0.0, )"
+            }
+          },
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48",
+            "net481"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "frameworkReferences": {
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          },
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\7.0.101\\RuntimeIdentifierGraph.json"
+        }
+      }
+    },
+    "D:\\Learning\\Projects\\ChatApp\\tests\\ChatApp.Application.Tests\\ChatApp.Application.Tests.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "D:\\Learning\\Projects\\ChatApp\\tests\\ChatApp.Application.Tests\\ChatApp.Application.Tests.csproj",
+        "projectName": "ChatApp.Application.Tests",
+        "projectPath": "D:\\Learning\\Projects\\ChatApp\\tests\\ChatApp.Application.Tests\\ChatApp.Application.Tests.csproj",
+        "packagesPath": "C:\\Users\\ilyam\\.nuget\\packages\\",
+        "outputPath": "D:\\Learning\\Projects\\ChatApp\\tests\\ChatApp.Application.Tests\\obj\\",
+        "projectStyle": "PackageReference",
+        "configFilePaths": [
+          "C:\\Users\\ilyam\\AppData\\Roaming\\NuGet\\NuGet.Config"
+        ],
+        "originalTargetFrameworks": [
+          "net7.0"
+        ],
+        "sources": {
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net7.0": {
+            "targetAlias": "net7.0",
+            "projectReferences": {
+              "D:\\Learning\\Projects\\ChatApp\\src\\ChatApp.Application\\ChatApp.Application.csproj": {
+                "projectPath": "D:\\Learning\\Projects\\ChatApp\\src\\ChatApp.Application\\ChatApp.Application.csproj"
+              },
+              "D:\\Learning\\Projects\\ChatApp\\src\\ChatApp.Infrastructure\\ChatApp.Infrastructure.csproj": {
+                "projectPath": "D:\\Learning\\Projects\\ChatApp\\src\\ChatApp.Infrastructure\\ChatApp.Infrastructure.csproj"
               }
             }
           }

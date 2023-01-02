@@ -30,7 +30,7 @@ public class UserService : IUserService
             user.RoomId);
     }
 
-    public async Task<ErrorOr<UserResponse>> AddUser(CreateUserRequest request)
+    public async Task<ErrorOr<UserResponse>> AddUserToRoom(CreateUserRequest request)
     {
         //TODO CHANGE IN THE REPOSITORY IF USER EXISTS IN THE CURRENT ROOM NOT IN DATABASE
         if (await _userRepository.UserExists(request.Username))
