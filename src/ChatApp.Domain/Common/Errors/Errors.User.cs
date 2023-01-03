@@ -16,5 +16,9 @@ public partial class Errors
         public static Error MessageIsNotRemoved => Error.Unexpected(
             "Message.MessageIsNotRemoved",
             "Message is not removed because of database error");
+        
+        public static Error MessagesIsNotRemoved => Error.Unexpected(
+            "Message.MessagesIsNotRemoved",
+            "All messages from this chat is not removed because of database error");
     }
 }

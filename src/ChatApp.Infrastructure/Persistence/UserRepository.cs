@@ -63,14 +63,35 @@ public class UserRepository : IUserRepository
         parameters.Add("RoomId", roomId.ToString(), DbType.String);
         parameters.Add("RoomName", roomName, DbType.String);
 
-        using (var connection = _dbContext.CreateConnection())
-        {
-            await connection.ExecuteAsync(query, parameters);
-            return await GetRoomById(roomId.ToString());
-        }
+        using var connection = _dbContext.CreateConnection();
+        await connection.ExecuteAsync(query, parameters);
+        
+        return await GetRoomById(roomId.ToString());
     }
 
-    public async Task<Room> GetRoomById(string roomId)
+    public async Task<List<User>> GetRoomUsers(string roomId)
+    {
+        var query = "SELECT * FROM [User] WHERE RoomId = @RoomId";
+
+        using var connection = _dbContext.CreateConnection();
+        List<User> users = await connection.QueryFirstOrDefaultAsync<List<User>>(query, new { RoomId = roomId });
+
+        return users;
+    }
+
+    public async Task<bool> UserExists(string username, string roomName)
+    {
+        var query = "SELECT COUNT(*) FROM [User] WHERE Username = @Username AND RoomName = @RoomName";
+
+        using var connection = _dbContext.CreateConnection();
+        int count = await connection
+            .QueryFirstOrDefaultAsync<int>(query, 
+                new { Username = username, RoomName = roomName });
+            
+        return count != 0;
+    }
+    
+    private async Task<Room> GetRoomById(string roomId)
     {
         var query = "SELECT * FROM Room WHERE RoomId = @RoomId";
 
@@ -81,41 +102,25 @@ public class UserRepository : IUserRepository
         }
     }
 
-    public Task<List<User>> GetRoomUsers(string roomName)
-    {
-        throw new NotImplementedException();
-    }
-
-    public async Task<bool> UserExists(string username)
-    {
-        var query = "SELECT COUNT(*) FROM [User] WHERE Username = @Username";
-
-        using (var connection = _dbContext.CreateConnection())
-        {
-            int count = await connection.QueryFirstOrDefaultAsync<int>(query, new { username });
-            return count != 0;
-        }
-    }
-
-    public async Task<bool> RoomExists(string roomName)
+    private async Task<bool> RoomExists(string roomName)
     {
         var query = "SELECT COUNT(*) FROM Room WHERE RoomName = @RoomName";
 
         using (var connection = _dbContext.CreateConnection())
         {
-            int count = await connection.QueryFirstOrDefaultAsync<int>(query, new { roomName });
+            int count = await connection
+                .QueryFirstOrDefaultAsync<int>(query, new { roomName });
             return count != 0;
         }
     }
 
-    public async Task<Room> GetRoomByRoomName(string roomName)
+    private async Task<Room> GetRoomByRoomName(string roomName)
     {
         var query = "SELECT * FROM Room WHERE RoomName = @RoomName";
 
-        using (var connection = _dbContext.CreateConnection())
-        {
-            Room room = await connection.QueryFirstOrDefaultAsync<Room>(query, new { roomName });
-            return room;
-        }
+        using var connection = _dbContext.CreateConnection();
+        Room room = await connection.QueryFirstOrDefaultAsync<Room>(query, new { roomName });
+        
+        return room;
     }
 }
