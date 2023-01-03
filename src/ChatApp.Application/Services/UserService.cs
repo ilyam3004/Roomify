@@ -11,12 +11,12 @@ namespace ChatApp.Application.Services;
 
 public class UserService : IUserService
 {
-    private readonly IValidator<CreateUserRequest> _validator;
+    private readonly IValidator<CreateUserRequest> _userValidator;
     private readonly IUserRepository _userRepository;
 
-    public UserService(IUserRepository userRepository, IValidator<CreateUserRequest> validator)
+    public UserService(IUserRepository userRepository, IValidator<CreateUserRequest> userValidator)
     {
-        _validator = validator;
+        _userValidator = userValidator;
         _userRepository = userRepository;
     }
 
@@ -32,15 +32,14 @@ public class UserService : IUserService
 
     public async Task<ErrorOr<UserResponse>> AddUserToRoom(CreateUserRequest request)
     {
-        //TODO CHANGE IN THE REPOSITORY IF USER EXISTS IN THE CURRENT ROOM NOT IN DATABASE
-        if (await _userRepository.UserExists(request.Username))
+        if (await _userRepository.UserExists(request.Username, request.RoomName))
         {
             return Errors.User.DuplicateUsername;
         }
         
         var room = await _userRepository.CreateRoomIfNotExists(request.RoomName);
         
-        var validateResult = await _validator.ValidateAsync(request);
+        var validateResult = await _userValidator.ValidateAsync(request);
         if (validateResult.IsValid)
         {
             var dbUser = await _userRepository.AddUser(new User

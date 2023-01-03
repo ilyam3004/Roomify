@@ -4,10 +4,11 @@ using Microsoft.AspNetCore.SignalR;
 namespace ChatApp.Api.Hubs;
 
 public class ChatHub : Hub
-{ 
+{
+ 
      public ChatHub()
      {
-         
+        
      }
      
      public async Task JoinRoom(UserRequest request)
