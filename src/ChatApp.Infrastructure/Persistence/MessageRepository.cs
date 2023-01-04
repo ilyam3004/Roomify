@@ -17,7 +17,7 @@ public class MessageRepository : IMessageRepository
 
     public async Task<Message> SaveMessage(Message message)
     {
-        var query = "INSERT INTO Message (MessageId, UserId, RoomId, Text, Date, FromUser) " +
+        string query = "INSERT INTO Message (MessageId, UserId, RoomId, Text, Date, FromUser) " +
                     "VALUES (@MessageId, @UserId, @RoomId, @Text, @Date, @FromUser)";
 
         using var connection = _dbContext.CreateConnection();
@@ -28,7 +28,7 @@ public class MessageRepository : IMessageRepository
 
     public async Task<bool> RemoveMessageById(string messageId)
     {
-        var query = "DELETE FROM Message WHERE MessageId = @MessageId";
+        string query = "DELETE FROM Message WHERE MessageId = @MessageId";
 
         using var connection = _dbContext.CreateConnection();
         await connection.ExecuteAsync(query, new { MessageId = messageId });
@@ -38,7 +38,7 @@ public class MessageRepository : IMessageRepository
 
     public async Task<bool> RemoveAllMessagesFromRoom(string roomId)
     {
-        var query = "DELETE FROM Message WHERE RoomId = @RoomId";
+        string query = "DELETE FROM Message WHERE RoomId = @RoomId";
         
         using var connection = _dbContext.CreateConnection();
         await connection.ExecuteAsync(query, new { RoomId = roomId });
@@ -58,7 +58,7 @@ public class MessageRepository : IMessageRepository
     
     private async Task<bool> MessageExists(string messageId)
     {
-        var query = "SELECT COUNT(*) FROM Message WHERE MessageId = @MessageId";
+        string query = "SELECT COUNT(*) FROM Message WHERE MessageId = @MessageId";
 
         using var connection = _dbContext.CreateConnection();
         int count = await connection.QueryFirstOrDefaultAsync<int>(query, new { messageId });
@@ -68,7 +68,7 @@ public class MessageRepository : IMessageRepository
     
     private async Task<Message> GetMessageById(string messageId)
     {
-        var query = "SELECT * FROM Message WHERE MessageId = @MessageId";
+        string query = "SELECT * FROM Message WHERE MessageId = @MessageId";
 
         using var connection = _dbContext.CreateConnection();
         var message = await connection.QueryFirstOrDefaultAsync<Message>(query, new { messageId });
@@ -78,15 +78,16 @@ public class MessageRepository : IMessageRepository
     
     private DynamicParameters GetInsertionQueryParameters(Message message)
     {
-        var parameters = new DynamicParameters();
+        DynamicParameters parameters = new();
+        {
+            parameters.Add("MessageId", message.MessageId, DbType.String);
+            parameters.Add("UserId", message.UserId, DbType.String);
+            parameters.Add("RoomId", message.RoomId, DbType.String);
+            parameters.Add("Text", message.Text, DbType.String);
+            parameters.Add("Date", message.Date, DbType.DateTime);
+            parameters.Add("FromUser", message.FromUser, DbType.Boolean);
+        }
         
-        parameters.Add("MessageId", message.MessageId, DbType.String);
-        parameters.Add("UserId", message.UserId, DbType.String);
-        parameters.Add("RoomId", message.RoomId, DbType.String);
-        parameters.Add("Text", message.Text, DbType.String);
-        parameters.Add("Date", message.Date, DbType.DateTime);
-        parameters.Add("FromUser", message.FromUser, DbType.Boolean);
-
         return parameters;
     }
 }

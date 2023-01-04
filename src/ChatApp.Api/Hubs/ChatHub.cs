@@ -23,6 +23,6 @@ public class ChatHub : Hub
      
      public async Task SendMessageToRoom(MessageRequest messageRequest) 
      {
-         await Clients.Group(messageRequest.RoomName).SendAsync("ReceiveMessage", messageRequest.Text, CancellationToken.None);
+         await Clients.Group(messageRequest.RoomId).SendAsync("ReceiveMessage", messageRequest.Text, CancellationToken.None);
      }
 }
