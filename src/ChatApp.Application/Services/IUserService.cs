@@ -6,6 +6,6 @@ namespace ChatApp.Application.Services;
 
 public interface IUserService
 {
-    Task<UserResponse> GetUserById(string userId);
     Task<ErrorOr<UserResponse>> AddUserToRoom(CreateUserRequest request);
+    Task<ErrorOr<string>> RemoveUserFromRoom(string userId, string roomId);
 }

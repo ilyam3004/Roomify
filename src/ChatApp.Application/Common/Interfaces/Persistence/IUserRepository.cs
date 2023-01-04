@@ -9,4 +9,7 @@ public interface IUserRepository
     Task<Room> CreateRoomIfNotExists(string roomName);
     Task<List<User>> GetRoomUsers(string roomId);
     Task<bool> UserExists(string username, string roomName);
+    Task<bool> UserExists(string userId);
+    Task<bool> RoomExists(string roomId);
+    Task<bool> RemoveUserFromRoom(string userId, string roomId);
 }

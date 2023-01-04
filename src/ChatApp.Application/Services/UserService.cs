@@ -20,16 +20,6 @@ public class UserService : IUserService
         _userRepository = userRepository;
     }
 
-    public async Task<UserResponse> GetUserById(string userId)
-    {
-        var user = await _userRepository.GetUserById(userId);
-        return new UserResponse(
-            user.UserId, 
-            user.Username, 
-            user.ConnectionId, 
-            user.RoomId);
-    }
-
     public async Task<ErrorOr<UserResponse>> AddUserToRoom(CreateUserRequest request)
     {
         if (await _userRepository.UserExists(request.Username, request.RoomName))
@@ -50,21 +40,43 @@ public class UserService : IUserService
                 ConnectionId = request.ConnectionId
             });
 
-            return new UserResponse(
-                dbUser.UserId,
-                dbUser.Username,
-                dbUser.ConnectionId,
-                dbUser.RoomId);
+            return MapUserResponse(dbUser);
         }
         
         return ConvertValidationErrorToError(validateResult.Errors);
     }
 
+    public async Task<ErrorOr<string>> RemoveUserFromRoom(string userId, string roomId)
+    {
+        if (!await _userRepository.UserExists(userId))
+        {
+            return Errors.User.UserNotFound;
+        }
+
+        if (!await _userRepository.RoomExists(roomId))
+        {
+            return Errors.Room.RoomNotFound;
+        }
+
+        bool userRemoved = await _userRepository.RemoveUserFromRoom(userId, roomId);
+
+        return userRemoved ? "User removed successfully" : Errors.User.UserNotRemoved;
+    }
+    
     private List<Error> ConvertValidationErrorToError(List<ValidationFailure> failures)
     {
         return failures.ConvertAll(
             validationFaliure => Error.Validation(
                 validationFaliure.PropertyName,
                 validationFaliure.ErrorMessage));
+    }
+
+    private UserResponse MapUserResponse(User user)
+    {
+        return new UserResponse(
+            user.UserId,
+            user.Username,
+            user.ConnectionId,
+            user.RoomId);
     }
 }
