@@ -1,6 +1,6 @@
 namespace ChatApp.Contracts.Rooms;
 
-public record UserRequest(
+public record JoinUserRequest(
     string Username,
     string ConnectionId,
     string RoomName);

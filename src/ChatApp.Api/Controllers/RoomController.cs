@@ -20,7 +20,7 @@ public class RoomController : ApiController
     }
 
     [HttpPost("addUser")]
-    public async Task<IActionResult> AddUser([FromBody]UserRequest request)
+    public async Task<IActionResult> AddUser([FromBody]JoinUserRequest request)
     {
         ErrorOr<UserResponse> result = await _userService.AddUserToRoom(
             new CreateUserRequest(
@@ -49,13 +49,23 @@ public class RoomController : ApiController
             errors => Problem(errors));
     }
     
-    [HttpPost("removeMessage/{messageId}")]
+    [HttpDelete("removeMessage/{messageId}")]
     public async Task<IActionResult> RemoveMessage(string messageId)
     {
         ErrorOr<string> removeMessageResult = await _messageService
             .RemoveMessage(messageId);
 
         return removeMessageResult.Match(
+            result => Ok(result),
+            errors => Problem(errors));
+    }
+
+    [HttpDelete("leaveRoom/{userId}")]
+    public async Task<IActionResult> LeaveRoom(string userId)
+    {
+        ErrorOr<string> result = await _userService.RemoveUserFromRoom(userId);
+
+        return result.Match(
             result => Ok(result),
             errors => Problem(errors));
     }
