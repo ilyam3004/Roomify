@@ -46,19 +46,14 @@ public class UserService : IUserService
         return ConvertValidationErrorToError(validateResult.Errors);
     }
 
-    public async Task<ErrorOr<string>> RemoveUserFromRoom(string userId, string roomId)
+    public async Task<ErrorOr<string>> RemoveUserFromRoom(string userId)
     {
         if (!await _userRepository.UserExists(userId))
         {
             return Errors.User.UserNotFound;
         }
 
-        if (!await _userRepository.RoomExists(roomId))
-        {
-            return Errors.Room.RoomNotFound;
-        }
-
-        bool userRemoved = await _userRepository.RemoveUserFromRoom(userId, roomId);
+        bool userRemoved = await _userRepository.RemoveUserFromRoom(userId);
 
         return userRemoved ? "User removed successfully" : Errors.User.UserNotRemoved;
     }

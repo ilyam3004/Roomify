@@ -23,7 +23,7 @@ public class SaveMessageRequestValidator : AbstractValidator<SaveMessageRequest>
             .NotNull()
             .NotEmpty();
         
-        RuleFor(m => m.RoomName)
+        RuleFor(m => m.RoomId)
             .NotNull()
             .NotEmpty();
     }

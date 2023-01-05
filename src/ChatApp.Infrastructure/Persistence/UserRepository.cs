@@ -9,10 +9,12 @@ namespace ChatApp.Infrastructure.Persistence;
 public class UserRepository : IUserRepository
 {
     private readonly AppDbContext _dbContext;
+    private readonly IMessageRepository _messageRepository;
 
-    public UserRepository(AppDbContext dbContext)
+    public UserRepository(AppDbContext dbContext, IMessageRepository messageRepository)
     {
         _dbContext = dbContext;
+        _messageRepository = messageRepository;
     }
 
     public async Task<User> AddUser(User user)
@@ -87,17 +89,30 @@ public class UserRepository : IUserRepository
         return count != 0;
     }
 
-    public async Task<bool> RemoveUserFromRoom(string userId, string roomId)
+    public async Task<bool> RemoveUserFromRoom(string userId)
     {
-        string query = "DELETE FROM [User] WHERE UserId = @UserId AND RoomId = @RoomId";
+        string removeUserQuery = "DELETE FROM [User] WHERE UserId = @UserId";
 
         using var connection = _dbContext.CreateConnection();
-        await connection.ExecuteAsync(query, 
-            new { UserId = userId, RoomId = roomId });
+        
+        await connection.ExecuteAsync(removeUserQuery, 
+            new { UserId = userId });
 
-        await RemoveRoomIfEmpty(roomId);
+        await RemoveRoomIfEmpty(await GetRoomIdByUserId(userId));
 
         return !(await UserExists(userId));
+    }
+
+    private async Task<string> GetRoomIdByUserId(string userId)
+    {
+        string query = "SELECT RoomId FROM [User] WHERE UserId = @UserId";
+
+        var connection = _dbContext.CreateConnection();
+
+        string roomId = await connection.QueryFirstOrDefaultAsync<string>(query, 
+            new { UserId = userId });
+
+        return roomId;
     }
 
     private async Task<Room> GetRoomById(string roomId)
@@ -109,6 +124,16 @@ public class UserRepository : IUserRepository
             Room room = await connection.QueryFirstOrDefaultAsync<Room>(query, new { roomId });
             return room;
         }
+    }
+
+    public async Task<string> GetRoomIdByConnectionId(string connectionId)
+    {
+        string query = "SELECT RoomId FROM [User] WHERE ConnectionId = @ConnectionId";
+        
+        using var connection = _dbContext.CreateConnection();
+        string roomId =  await connection.QueryFirstOrDefaultAsync<string>(query, new { ConnectionId = connectionId });
+
+        return roomId;
     }
 
     public async Task<bool> RoomExists(string roomId)
@@ -134,13 +159,15 @@ public class UserRepository : IUserRepository
     
     private async Task RemoveRoomIfEmpty(string roomId)
     {
+        var messagesDeleted = await _messageRepository.RemoveAllMessagesFromRoom(roomId);
+        
         string query = "SELECT COUNT(*) FROM [User] WHERE RoomId = @RoomId";
 
         using var connection = _dbContext.CreateConnection();
         int count = await connection.QueryFirstOrDefaultAsync<int>(query, 
             new { RoomId = roomId });
 
-        if (count == 0)
+        if (count == 0 && messagesDeleted)
             await RemoveRoom(roomId);
     }
 

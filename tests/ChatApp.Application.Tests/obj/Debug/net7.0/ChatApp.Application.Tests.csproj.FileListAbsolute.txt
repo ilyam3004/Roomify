@@ -144,3 +144,5 @@ D:\Learning\Projects\ChatApp\tests\ChatApp.Application.Tests\obj\Debug\net7.0\re
 D:\Learning\Projects\ChatApp\tests\ChatApp.Application.Tests\obj\Debug\net7.0\ChatApp.Application.Tests.pdb
 D:\Learning\Projects\ChatApp\tests\ChatApp.Application.Tests\obj\Debug\net7.0\ChatApp.Application.Tests.genruntimeconfig.cache
 D:\Learning\Projects\ChatApp\tests\ChatApp.Application.Tests\obj\Debug\net7.0\ref\ChatApp.Application.Tests.dll
+D:\Learning\Projects\ChatApp\tests\ChatApp.Application.Tests\bin\Debug\net7.0\ErrorOr.dll
+D:\Learning\Projects\ChatApp\tests\ChatApp.Application.Tests\bin\Debug\net7.0\FluentResults.dll
