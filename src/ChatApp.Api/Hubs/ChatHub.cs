@@ -1,5 +1,4 @@
 using ErrorOr;
-using Newtonsoft.Json;
 using ChatApp.Application.Models.Requests;
 using ChatApp.Application.Models.Responses;
 using ChatApp.Application.Services;
@@ -7,15 +6,18 @@ using ChatApp.Contracts.Rooms;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
+using Newtonsoft.Json;
 
 namespace ChatApp.Api.Hubs;
 
 public class ChatHub : Hub
 {
      private readonly IUserService _userService;
-     public ChatHub(IUserService userService)
+     private readonly IMessageService _messageService; 
+     public ChatHub(IUserService userService, IMessageService messageService)
      {
          _userService = userService;
+         _messageService = messageService;
      }
      
      public async Task JoinRoom(JoinUserRequest request)
@@ -23,27 +25,54 @@ public class ChatHub : Hub
          ErrorOr<UserResponse> result = await _userService.AddUserToRoom(
              new CreateUserRequest(
                  request.Username, 
-                 request.ConnectionId, 
+                 Context.ConnectionId, 
                  request.RoomName));
-
-         Clients.Group("testroom").SendAsync("ReceiveMessage", result);
+         
+         if (!result.IsError)
+         {
+             await Clients.Group(result.Value.RoomId)
+                 .SendAsync("ReceiveMessage", result);
+         }
+         else
+         {
+             await Clients.Client(Context.ConnectionId)
+                 .SendAsync("ReceiveMessage", Problem(result.Errors));
+         }
      }
      
-     public override async Task<Task> OnDisconnectedAsync(Exception? exception)
+     public override async Task OnDisconnectedAsync(Exception? exception)
      {
-         return base.OnDisconnectedAsync(exception);
+         Console.WriteLine($"Connection {Context.ConnectionId} was closed");
+         await base.OnDisconnectedAsync(exception);
      }
      
      public async Task SendMessageToRoom(MessageRequest messageRequest)
      {
+         ErrorOr<MessageResponse> result = await _messageService.SaveMessage(
+             new SaveMessageRequest(
+                 messageRequest.UserId,
+                 messageRequest.RoomId,
+                 messageRequest.Text,
+                 messageRequest.Date,
+                 messageRequest.FromUser));
 
+         if (!result.IsError)
+         {
+             await Clients.Group(result.Value.RoomId)
+                 .SendAsync("ReceiveMessage", result);
+         }
+         else
+         {
+             await Clients.Client(Context.ConnectionId)
+                 .SendAsync("ReceiveMessage", Problem(result.Errors));
+         }
      }
 
      private ProblemDetails Problem(List<Error> errors)
      {
          if (errors.All(error => error.Type == ErrorType.Validation))
          {
-             return ValidationProblem(errors);
+             return GetValidationProblem(errors);
          }
 
          if (errors.Count is 0)
@@ -64,14 +93,22 @@ public class ChatHub : Hub
              _ => StatusCodes.Status500InternalServerError
          };
 
+         var type = error.Type switch
+         {
+             ErrorType.Conflict => "",
+             ErrorType.Failure => "",
+             _ => ""
+         };
+
          return new ProblemDetails
          {
              Status = statusCode,
-             Detail = error.Description
+             Detail = error.Description,
+             Type = type
          };
      }
 
-     private ValidationProblemDetails ValidationProblem(List<Error> errors)
+     private ValidationProblemDetails GetValidationProblem(List<Error> errors)
      {
          var modelStateDictionary = new ModelStateDictionary();
 

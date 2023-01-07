@@ -24,6 +24,7 @@ public class MessageService : IMessageService
     public async Task<ErrorOr<MessageResponse>> SaveMessage(SaveMessageRequest request)
     {
         var validateResult = await _messageValidator.ValidateAsync(request);
+        
         if (validateResult.IsValid)
         {
             var dbMessage = await _messageRepository.SaveMessage(new Message
