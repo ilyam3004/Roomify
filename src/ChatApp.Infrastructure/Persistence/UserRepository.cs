@@ -22,7 +22,7 @@ public class UserRepository : IUserRepository
         var query = "INSERT INTO [User] (UserId, Username, ConnectionId, RoomId) VALUES (@UserId, @Username, @ConnectionId, @RoomId)";
 
         using var connection = _dbContext.CreateConnection();
-        await connection.ExecuteAsync(query, GetUserInsertionParameters(user));
+        await connection.ExecuteAsync(query, user);
         var dbUser = await GetUserById(user.UserId);
         
         return dbUser;
@@ -66,14 +66,14 @@ public class UserRepository : IUserRepository
         return users;
     }
 
-    public async Task<bool> UserExists(string username, string roomName)
+    public async Task<bool> UserExists(string username, string roomId)
     {
-        var query = "SELECT COUNT(*) FROM [User] WHERE Username = @Username AND RoomName = @RoomName";
+        var query = "SELECT COUNT(*) FROM [User] WHERE Username = @Username AND RoomId = @RoomId";
 
         using var connection = _dbContext.CreateConnection();
         int count = await connection
             .QueryFirstOrDefaultAsync<int>(query, 
-                new { Username = username, RoomName = roomName });
+                new { Username = username, RoomId = roomId });
             
         return count != 0;
     }
@@ -152,7 +152,8 @@ public class UserRepository : IUserRepository
         var query = "SELECT * FROM Room WHERE RoomName = @RoomName";
 
         using var connection = _dbContext.CreateConnection();
-        Room room = await connection.QueryFirstOrDefaultAsync<Room>(query, new { roomName });
+        Room room = await connection.QueryFirstOrDefaultAsync<Room>(
+            query, new { RoomName = roomName });
         
         return room;
     }
@@ -185,7 +186,7 @@ public class UserRepository : IUserRepository
 
         using var connection = _dbContext.CreateConnection();
         int count = await connection
-            .QueryFirstOrDefaultAsync<int>(query, new { roomName });
+            .QueryFirstOrDefaultAsync<int>(query, new { RoomName = roomName  });
         return count != 0;
     }
 

@@ -19,19 +19,19 @@ public class RoomController : ApiController
         _messageService = messageService;
     }
 
-    [HttpPost("addUser")]
-    public async Task<IActionResult> AddUser([FromBody]JoinUserRequest request)
-    {
-        ErrorOr<UserResponse> result = await _userService.AddUserToRoom(
-            new CreateUserRequest(
-                request.Username, 
-                request.ConnectionId, 
-                request.RoomName));
-
-        return result.Match(
-            result => Ok(result),
-        errors => Problem(errors));
-    }
+    // [HttpPost("addUser")]
+    // public async Task<IActionResult> AddUser([FromBody]JoinUserRequest request)
+    // {
+    //     ErrorOr<UserResponse> result = await _userService.AddUserToRoom(
+    //         new CreateUserRequest(
+    //             request.Username, 
+    //             request.RoomName, 
+    //             request.RoomName));
+    //
+    //     return result.Match(
+    //         result => Ok(result),
+    //     errors => Problem(errors));
+    // }
     
     [HttpPost("sendMessage")]
     public async Task<IActionResult> SaveMessage([FromBody]MessageRequest request)

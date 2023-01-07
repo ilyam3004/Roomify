@@ -22,12 +22,12 @@ public class UserService : IUserService
 
     public async Task<ErrorOr<UserResponse>> AddUserToRoom(CreateUserRequest request)
     {
-        if (await _userRepository.UserExists(request.Username, request.RoomName))
+        var room = await _userRepository.CreateRoomIfNotExists(request.RoomName);
+        
+        if (await _userRepository.UserExists(request.Username, room.RoomId))
         {
             return Errors.User.DuplicateUsername;
         }
-        
-        var room = await _userRepository.CreateRoomIfNotExists(request.RoomName);
         
         var validateResult = await _userValidator.ValidateAsync(request);
         if (validateResult.IsValid)
