@@ -1,5 +1,4 @@
 using Dapper;
-using System.Data;
 using ChatApp.Domain.Entities;
 using ChatApp.Infrastructure.Config;
 using ChatApp.Application.Common.Interfaces.Persistence;
@@ -21,7 +20,7 @@ public class MessageRepository : IMessageRepository
                     "VALUES (@MessageId, @UserId, @RoomId, @Text, @Date, @FromUser)";
 
         using var connection = _dbContext.CreateConnection();
-        await connection.ExecuteAsync(query, GetInsertionQueryParameters(message));
+        await connection.ExecuteAsync(query, message);
 
         return await GetMessageById(message.MessageId);
     }
@@ -74,20 +73,5 @@ public class MessageRepository : IMessageRepository
         var message = await connection.QueryFirstOrDefaultAsync<Message>(query, new { messageId });
         
         return message;
-    }
-    
-    private DynamicParameters GetInsertionQueryParameters(Message message)
-    {
-        DynamicParameters parameters = new();
-        {
-            parameters.Add("MessageId", message.MessageId, DbType.String);
-            parameters.Add("UserId", message.UserId, DbType.String);
-            parameters.Add("RoomId", message.RoomId, DbType.String);
-            parameters.Add("Text", message.Text, DbType.String);
-            parameters.Add("Date", message.Date, DbType.DateTime);
-            parameters.Add("FromUser", message.FromUser, DbType.Boolean);
-        }
-        
-        return parameters;
     }
 }

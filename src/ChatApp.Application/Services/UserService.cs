@@ -22,16 +22,17 @@ public class UserService : IUserService
 
     public async Task<ErrorOr<UserResponse>> AddUserToRoom(CreateUserRequest request)
     {
-        var room = await _userRepository.CreateRoomIfNotExists(request.RoomName);
-        
-        if (await _userRepository.UserExists(request.Username, room.RoomId))
-        {
-            return Errors.User.DuplicateUsername;
-        }
-        
         var validateResult = await _userValidator.ValidateAsync(request);
+        
         if (validateResult.IsValid)
-        {
+        {   
+            var room = await _userRepository.CreateRoomIfNotExists(request.RoomName);
+        
+            if (await _userRepository.UserExists(request.Username, room.RoomId))
+            {
+                return Errors.User.DuplicateUsername;
+            }
+            
             var dbUser = await _userRepository.AddUser(new User
             {
                 UserId = Guid.NewGuid().ToString(),
@@ -65,6 +66,8 @@ public class UserService : IUserService
                 validationFaliure.PropertyName,
                 validationFaliure.ErrorMessage));
     }
+    
+    
 
     private UserResponse MapUserResponse(User user)
     {
