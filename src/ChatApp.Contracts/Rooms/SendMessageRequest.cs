@@ -1,6 +1,6 @@
 namespace ChatApp.Contracts.Rooms;
 
-public record MessageRequest(
+public record SendMessageRequest(
     string UserId,
     string RoomId,
     string Text,

@@ -34,7 +34,7 @@ public class RoomController : ApiController
     // }
     
     [HttpPost("sendMessage")]
-    public async Task<IActionResult> SaveMessage([FromBody]MessageRequest request)
+    public async Task<IActionResult> SaveMessage([FromBody]SendMessageRequest request)
     {
         ErrorOr<MessageResponse> saveMessageResult = await _messageService
             .SaveMessage(new SaveMessageRequest(

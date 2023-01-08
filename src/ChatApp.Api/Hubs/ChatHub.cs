@@ -6,7 +6,6 @@ using ChatApp.Contracts.Rooms;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
-using Newtonsoft.Json;
 
 namespace ChatApp.Api.Hubs;
 
@@ -27,11 +26,22 @@ public class ChatHub : Hub
                  request.Username, 
                  Context.ConnectionId, 
                  request.RoomName));
-         
+
          if (!result.IsError)
          {
-             await Clients.Group(result.Value.RoomId)
-                 .SendAsync("ReceiveMessage", result);
+             var user = result.Value;
+             
+             await Groups.AddToGroupAsync(Context.ConnectionId, user.RoomId);
+             
+             await Clients.Client(Context.ConnectionId)
+                 .SendAsync("ReceiveMessage");
+
+             await SendMessageToRoom(new SendMessageRequest(
+                 user.UserId,
+                 user.RoomId,
+                 $"User { user.Username } has joined the room",
+                 DateTime.UtcNow,
+                 false));
          }
          else
          {
@@ -42,19 +52,18 @@ public class ChatHub : Hub
      
      public override async Task OnDisconnectedAsync(Exception? exception)
      {
-         Console.WriteLine($"Connection {Context.ConnectionId} was closed");
          await base.OnDisconnectedAsync(exception);
      }
      
-     public async Task SendMessageToRoom(MessageRequest messageRequest)
+     public async Task SendMessageToRoom(SendMessageRequest request)
      {
          ErrorOr<MessageResponse> result = await _messageService.SaveMessage(
              new SaveMessageRequest(
-                 messageRequest.UserId,
-                 messageRequest.RoomId,
-                 messageRequest.Text,
-                 messageRequest.Date,
-                 messageRequest.FromUser));
+                 request.UserId,
+                 request.RoomId,
+                 request.Text,
+                 request.Date,
+                 request.FromUser));
 
          if (!result.IsError)
          {
@@ -88,22 +97,20 @@ public class ChatHub : Hub
          var statusCode = error.Type switch
          {
              ErrorType.Conflict => StatusCodes.Status409Conflict,
-             ErrorType.Validation => StatusCodes.Status400BadRequest,
              ErrorType.NotFound => StatusCodes.Status404NotFound,
              _ => StatusCodes.Status500InternalServerError
          };
 
          var type = error.Type switch
          {
-             ErrorType.Conflict => "",
-             ErrorType.Failure => "",
-             _ => ""
+             ErrorType.Conflict => "https://www.rfc-editor.org/rfc/rfc7231#section-6.5.8",
+             ErrorType.NotFound => "https://www.rfc-editor.org/rfc/rfc7231#section-6.5.4",
+             _ => "https://www.rfc-editor.org/rfc/rfc7231#section-6.6.1"
          };
-
          return new ProblemDetails
          {
              Status = statusCode,
-             Detail = error.Description,
+             Title = error.Description,
              Type = type
          };
      }
@@ -119,6 +126,11 @@ public class ChatHub : Hub
                  error.Description);
          }
 
-         return new ValidationProblemDetails(modelStateDictionary);
+         return new ValidationProblemDetails(modelStateDictionary)
+         {
+             Status = StatusCodes.Status400BadRequest,
+             Type = "https://www.rfc-editor.org/rfc/rfc7231#section-6.5.1", 
+             Title = "One or more validation errors occured"
+         };
      }
 }

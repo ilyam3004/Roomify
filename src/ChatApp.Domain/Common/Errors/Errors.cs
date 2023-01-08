@@ -14,18 +14,18 @@ public partial class Errors
                 "User.UserNotFound",
                 "User with this userId not found in this room");
 
-        public static Error UserNotRemoved => Error.Unexpected(
+        public static Error UserNotRemoved => Error.Failure(
             "User.UserNotRemoved",
             "User not remove because of database error");
     }
 
     public class Message 
     {
-        public static Error MessageIsNotRemoved => Error.Unexpected(
+        public static Error MessageIsNotRemoved => Error.Failure(
             "Message.MessageIsNotRemoved",
             "Message is not removed because of database error");
         
-        public static Error MessagesIsNotRemoved => Error.Unexpected(
+        public static Error MessagesIsNotRemoved => Error.Failure(
             "Message.MessagesIsNotRemoved",
             "All messages from this chat is not removed because of database error");
     }

@@ -46,14 +46,17 @@ public class UserRepository : IUserRepository
         }
 
         string query = "INSERT INTO Room (RoomId, RoomName) VALUES (@RoomId, @RoomName)";
-        
-        var roomId = Guid.NewGuid();
+
+        var room = new Room
+        {
+            RoomId = Guid.NewGuid().ToString(),
+            RoomName = roomName
+        };
 
         using var connection = _dbContext.CreateConnection();
-        await connection.ExecuteAsync(query, 
-            GetRoomInsertionQueryParameters(roomId.ToString(), roomName));
+        await connection.ExecuteAsync(query, room);
         
-        return await GetRoomById(roomId.ToString());
+        return await GetRoomById(room.RoomId);
     }
 
     public async Task<List<User>> GetRoomUsers(string roomId)
@@ -188,29 +191,5 @@ public class UserRepository : IUserRepository
         int count = await connection
             .QueryFirstOrDefaultAsync<int>(query, new { RoomName = roomName  });
         return count != 0;
-    }
-
-    private DynamicParameters GetRoomInsertionQueryParameters(string roomId, string roomName)
-    {
-        DynamicParameters parameters = new();
-        {
-            parameters.Add("RoomId", roomId, DbType.String);
-            parameters.Add("RoomName", roomName, DbType.String);
-        }
-        
-        return parameters;
-    }
-
-    private DynamicParameters GetUserInsertionParameters(User user)
-    {
-        DynamicParameters parameters = new();
-        {
-            parameters.Add("UserId", user.UserId, DbType.String);
-            parameters.Add("Username", user.Username, DbType.String);
-            parameters.Add("ConnectionId", user.ConnectionId, DbType.String);
-            parameters.Add("RoomId", user.RoomId, DbType.String);
-        }
-
-        return new DynamicParameters();
     }
 }
