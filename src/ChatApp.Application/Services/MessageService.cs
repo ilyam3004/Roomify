@@ -12,13 +12,16 @@ namespace ChatApp.Application.Services;
 public class MessageService : IMessageService
 {
     private readonly IMessageRepository _messageRepository;
+    private readonly IUserRepository _userRepository;
     private readonly IValidator<SaveMessageRequest> _messageValidator;
 
-    public MessageService(IMessageRepository messageRepository,
+    public MessageService(IMessageRepository messageRepository, 
+        IUserRepository userRepository,
         IValidator<SaveMessageRequest> messageValidator)
     {
         _messageRepository = messageRepository;
         _messageValidator = messageValidator;
+        _userRepository = userRepository;
     }
 
     public async Task<ErrorOr<MessageResponse>> SaveMessage(SaveMessageRequest request)
@@ -27,17 +30,23 @@ public class MessageService : IMessageService
         
         if (validateResult.IsValid)
         {
-            var dbMessage = await _messageRepository.SaveMessage(new Message
+            if (await _userRepository.UserExists(request.UserId))
             {
-                MessageId = Guid.NewGuid().ToString(),
-                UserId = request.UserId,
-                RoomId = request.RoomId,
-                Text = request.Text,
-                Date = request.Date,
-                FromUser = request.FromUser
-            });
+                var user = await _userRepository.GetUserById(request.UserId);
+                var dbMessage = await _messageRepository.SaveMessage(new Message
+                {
+                    MessageId = Guid.NewGuid().ToString(),
+                    UserId = request.UserId,
+                    RoomId = request.RoomId,
+                    Text = request.Text,
+                    Date = request.Date,
+                    FromUser = request.FromUser
+                });
+                
+                return MapMessageResponseResult(dbMessage, user);
+            }
 
-            return MapMessageResponseResult(dbMessage);
+            return Errors.User.UserNotFound;
         }
         
         return ConvertValidationErrorToError(validateResult.Errors);
@@ -64,11 +73,12 @@ public class MessageService : IMessageService
                 validationFaliure.ErrorMessage));
     }
 
-    private MessageResponse MapMessageResponseResult(Message message)
+    private MessageResponse MapMessageResponseResult(Message message, User user)
     {
         return new MessageResponse(
                 message.MessageId,
-                message.UserId,
+                user.Username,
+                user.UserId,
                 message.RoomId,
                 message.Text,
                 message.Date,

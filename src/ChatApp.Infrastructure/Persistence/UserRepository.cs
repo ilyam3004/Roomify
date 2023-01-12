@@ -129,16 +129,6 @@ public class UserRepository : IUserRepository
         }
     }
 
-    public async Task<string> GetRoomIdByConnectionId(string connectionId)
-    {
-        string query = "SELECT RoomId FROM [User] WHERE ConnectionId = @ConnectionId";
-        
-        using var connection = _dbContext.CreateConnection();
-        string roomId =  await connection.QueryFirstOrDefaultAsync<string>(query, new { ConnectionId = connectionId });
-
-        return roomId;
-    }
-
     public async Task<bool> RoomExists(string roomId)
     {
         string query = "SELECT COUNT(*) FROM Room WHERE RoomId = @RoomId";
