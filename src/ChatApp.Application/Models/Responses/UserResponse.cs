@@ -4,4 +4,5 @@ public record UserResponse(
     string UserId,
     string Username,
     string ConnectionId,
-    string RoomId);
+    string RoomId,
+    string RoomName);

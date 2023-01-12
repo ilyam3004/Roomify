@@ -8,4 +8,5 @@ public interface IUserService
 {
     Task<ErrorOr<UserResponse>> AddUserToRoom(CreateUserRequest request);
     Task<ErrorOr<string>> RemoveUserFromRoom(string userId);
+    Task<ErrorOr<List<UserResponse>>> GetUserList(string roomId, string roomName);
 }

@@ -18,11 +18,10 @@ public class SaveMessageRequestValidator : AbstractValidator<SaveMessageRequest>
         RuleFor(m => m.Date)
             .NotNull()
             .NotEmpty();
-        
+
         RuleFor(m => m.FromUser)
-            .NotNull()
-            .NotEmpty();
-        
+            .NotNull();
+
         RuleFor(m => m.RoomId)
             .NotNull()
             .NotEmpty();

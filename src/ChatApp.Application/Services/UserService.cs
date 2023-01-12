@@ -41,7 +41,7 @@ public class UserService : IUserService
                 ConnectionId = request.ConnectionId
             });
 
-            return MapUserResponse(dbUser);
+            return MapUserResponse(dbUser, room);
         }
         
         return ConvertValidationErrorToError(validateResult.Errors);
@@ -58,6 +58,17 @@ public class UserService : IUserService
 
         return userRemoved ? "User removed successfully" : Errors.User.UserNotRemoved;
     }
+
+    public async Task<ErrorOr<List<UserResponse>>> GetUserList(string roomId, string roomName)
+    {
+        List<User> dbUsers = await _userRepository.GetRoomUsers(roomId);
+
+        return MapUserList(dbUsers, new Room
+        {
+            RoomId = roomId,
+            RoomName = roomName
+        });
+    }
     
     private List<Error> ConvertValidationErrorToError(List<ValidationFailure> failures)
     {
@@ -66,15 +77,28 @@ public class UserService : IUserService
                 validationFaliure.PropertyName,
                 validationFaliure.ErrorMessage));
     }
+
+    private List<UserResponse> MapUserList(List<User> dbUsers, Room room)
+    {
+        List<UserResponse> userList = new();
+
+        foreach (var user in dbUsers)
+        {
+            userList.Add(MapUserResponse(user, room));
+        }
+
+        return userList;
+    }
     
     
 
-    private UserResponse MapUserResponse(User user)
+    private UserResponse MapUserResponse(User user, Room room)
     {
         return new UserResponse(
             user.UserId,
             user.Username,
             user.ConnectionId,
-            user.RoomId);
+            room.RoomId,
+            room.RoomName);
     }
 }

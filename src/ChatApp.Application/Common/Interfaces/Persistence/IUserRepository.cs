@@ -12,5 +12,4 @@ public interface IUserRepository
     Task<bool> UserExists(string userId);
     Task<bool> RoomExists(string roomId);
     Task<bool> RemoveUserFromRoom(string userId);
-    Task<string> GetRoomIdByConnectionId(string connectionId);
 }

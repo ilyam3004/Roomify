@@ -18,10 +18,9 @@ public class ChatHub : Hub
          _userService = userService;
          _messageService = messageService;
      }
-
+     
      public async Task JoinRoom(JoinUserRequest request)
      {
-         Console.WriteLine($"Connection {Context.ConnectionId} was opened");
          ErrorOr<UserResponse> result = await _userService.AddUserToRoom(
              new CreateUserRequest(
                  request.Username, 
@@ -35,9 +34,7 @@ public class ChatHub : Hub
              await Groups.AddToGroupAsync(Context.ConnectionId, user.RoomId);
              
              await Clients.Client(Context.ConnectionId)
-                 .SendAsync("ReceiveUserData", user);
-             
-             await SendUserListToRoom(user);
+                 .SendAsync("ReceiveMessage");
 
              await SendMessageToRoom(new SendMessageRequest(
                  user.UserId,
@@ -49,7 +46,7 @@ public class ChatHub : Hub
          else
          {
              await Clients.Client(Context.ConnectionId)
-                 .SendAsync("ReceiveError", Problem(result.Errors));
+                 .SendAsync("ReceiveMessage", Problem(result.Errors));
          }
      }
      
@@ -71,22 +68,12 @@ public class ChatHub : Hub
          if (!result.IsError)
          {
              await Clients.Group(result.Value.RoomId)
-                 .SendAsync("ReceiveMessage", result.Value);
+                 .SendAsync("ReceiveMessage", result);
          }
          else
          {
              await Clients.Client(Context.ConnectionId)
                  .SendAsync("ReceiveMessage", Problem(result.Errors));
-         }
-     }
-
-     public async Task SendUserListToRoom(UserResponse response)
-     {
-         ErrorOr<List<UserResponse>> result = await _userService.GetUserList();
-
-         if (!result.IsError)
-         {
-             await Clients.Groups(roomId).SendAsync("UserList", result.Value);
          }
      }
 
