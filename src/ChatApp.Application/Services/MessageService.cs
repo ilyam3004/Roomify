@@ -65,12 +65,31 @@ public class MessageService : IMessageService
         return deleted ? "Chat successfully deleted" : Errors.Message.MessagesIsNotRemoved;
     }
 
+    public async Task<ErrorOr<List<MessageResponse>>> GetAllRoomMessages(string roomId)
+    {
+        List<Message> dbMessages = await _messageRepository.GetAllRoomMessages(roomId);
+        
+        return await MapRoomMessagesResponseResult(dbMessages);
+    }
+
     private List<Error> ConvertValidationErrorToError(List<ValidationFailure> failures)
     {
         return failures.ConvertAll(
             validationFaliure => Error.Validation(
                 validationFaliure.PropertyName,
                 validationFaliure.ErrorMessage));
+    }
+
+    private async Task<List<MessageResponse>> MapRoomMessagesResponseResult(List<Message> dbMessages)
+    {
+        List<MessageResponse> messages = new();
+        foreach (var dbMessage in dbMessages)
+        {
+            var user = await _userRepository.GetUserById(dbMessage.UserId);
+            messages.Add(MapMessageResponseResult(dbMessage, user));
+        }
+
+        return messages;
     }
 
     private MessageResponse MapMessageResponseResult(Message message, User user)
