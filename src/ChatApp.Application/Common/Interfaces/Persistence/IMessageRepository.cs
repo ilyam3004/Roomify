@@ -7,4 +7,6 @@ public interface IMessageRepository
     Task<Message> SaveMessage(Message message);
     Task<bool> RemoveMessageById(string messageId);
     Task<bool> RemoveAllMessagesFromRoom(string roomId);
+    Task<List<Message>> GetAllRoomMessages(string roomId);
+
 }

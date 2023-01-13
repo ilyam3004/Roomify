@@ -30,12 +30,9 @@ public class ChatHub : Hub
          if (!result.IsError)
          {
              var user = result.Value;
-             
              await Groups.AddToGroupAsync(Context.ConnectionId, user.RoomId);
-             
-             await Clients.Client(Context.ConnectionId)
-                 .SendAsync("ReceiveMessage");
-
+             await SendUserData(user);
+             await SendAllRoomMessages(user.RoomId);
              await SendMessageToRoom(new SendMessageRequest(
                  user.UserId,
                  user.RoomId,
@@ -46,15 +43,10 @@ public class ChatHub : Hub
          else
          {
              await Clients.Client(Context.ConnectionId)
-                 .SendAsync("ReceiveMessage", Problem(result.Errors));
+                 .SendAsync("ReceiveError", Problem(result.Errors));
          }
      }
-     
-     public override async Task OnDisconnectedAsync(Exception? exception)
-     {
-         await base.OnDisconnectedAsync(exception);
-     }
-     
+
      public async Task SendMessageToRoom(SendMessageRequest request)
      {
          ErrorOr<MessageResponse> result = await _messageService.SaveMessage(
@@ -68,13 +60,30 @@ public class ChatHub : Hub
          if (!result.IsError)
          {
              await Clients.Group(result.Value.RoomId)
-                 .SendAsync("ReceiveMessage", result);
+                 .SendAsync("ReceiveMessage", result.Value);
          }
          else
          {
              await Clients.Client(Context.ConnectionId)
                  .SendAsync("ReceiveMessage", Problem(result.Errors));
          }
+     }
+
+     public async Task SendAllRoomMessages(string roomId)
+     {
+         ErrorOr<List<MessageResponse>> messages = await _messageService.GetAllRoomMessages(roomId);
+         await Clients.Client(Context.ConnectionId).SendAsync("ReceiveAllRoomMessages", messages);
+     }
+
+     public override async Task OnDisconnectedAsync(Exception? exception)
+     {
+         await base.OnDisconnectedAsync(exception);
+     }
+
+     public async Task SendUserData(UserResponse response)
+     {
+         await Clients.Client(Context.ConnectionId)
+             .SendAsync("ReceiveUserData", response);
      }
 
      private ProblemDetails Problem(List<Error> errors)

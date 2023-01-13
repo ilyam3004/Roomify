@@ -45,6 +45,17 @@ public class MessageRepository : IMessageRepository
         return !(await MessagesExistsInRoom(roomId));
     }
 
+    public async Task<List<Message>> GetAllRoomMessages(string roomId)
+    {
+        string query = "SELECT * FROM Message WHERE RoomId = RoomId";
+        
+        using var connection = _dbContext.CreateConnection();
+        List<Message> messages = await connection
+            .QueryFirstOrDefaultAsync<List<Message>>(query, roomId);
+
+        return messages;
+    }
+
     private async Task<bool> MessagesExistsInRoom(string roomId)
     {
         string query = "SELECT COUNT(*) FROM Message WHERE RoomId = @RoomId";
