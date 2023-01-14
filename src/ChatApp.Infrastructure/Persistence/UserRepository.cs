@@ -1,5 +1,4 @@
 using Dapper;
-using System.Data;
 using ChatApp.Domain.Entities;
 using ChatApp.Infrastructure.Config;
 using ChatApp.Application.Common.Interfaces.Persistence;
@@ -64,9 +63,20 @@ public class UserRepository : IUserRepository
         var query = "SELECT * FROM [User] WHERE RoomId = @RoomId";
 
         using var connection = _dbContext.CreateConnection();
-        List<User> users = await connection.QueryFirstOrDefaultAsync<List<User>>(query, new { RoomId = roomId });
+        IEnumerable<User> users = await connection.QueryAsync<User>(query, new {RoomId = roomId});
 
-        return users;
+        return users.ToList();
+    }
+    
+    public async Task<Room> GetRoomById(string roomId)
+    {
+        var query = "SELECT * FROM Room WHERE RoomId = @RoomId";
+
+        using (var connection = _dbContext.CreateConnection())
+        {
+            Room room = await connection.QueryFirstOrDefaultAsync<Room>(query, new { roomId });
+            return room;
+        }
     }
 
     public async Task<bool> UserExists(string username, string roomId)
@@ -80,6 +90,16 @@ public class UserRepository : IUserRepository
             
         return count != 0;
     }
+
+    public async Task<User> GetUserByConnectionId(string connectionId)
+    {
+        string query = "SELECT * FROM [User] WHERE ConnectionId = @ConnectionId";
+
+        using var connection = _dbContext.CreateConnection();
+        User user = await connection.QueryFirstOrDefaultAsync<User>(query, new {ConnectionId = connectionId});
+        return user;
+    }
+
 
     public async Task<bool> UserExists(string userId)
     {
@@ -116,17 +136,6 @@ public class UserRepository : IUserRepository
             new { UserId = userId });
 
         return roomId;
-    }
-
-    private async Task<Room> GetRoomById(string roomId)
-    {
-        var query = "SELECT * FROM Room WHERE RoomId = @RoomId";
-
-        using (var connection = _dbContext.CreateConnection())
-        {
-            Room room = await connection.QueryFirstOrDefaultAsync<Room>(query, new { roomId });
-            return room;
-        }
     }
 
     public async Task<bool> RoomExists(string roomId)
@@ -172,7 +181,7 @@ public class UserRepository : IUserRepository
         using var connection = _dbContext.CreateConnection();
         await connection.ExecuteAsync(query, new { RoomId = roomId });
     }
-    
+
     private async Task<bool> RoomExistsByRoomName(string roomName)
     {
         var query = "SELECT COUNT(*) FROM Room WHERE RoomName = @RoomName";
