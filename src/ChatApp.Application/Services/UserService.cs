@@ -59,17 +59,28 @@ public class UserService : IUserService
         return userRemoved ? "User removed successfully" : Errors.User.UserNotRemoved;
     }
 
-    public async Task<ErrorOr<List<UserResponse>>> GetUserList(string roomId, string roomName)
+    public async Task<ErrorOr<List<UserResponse>>> GetUserList(string roomId)
     {
         List<User> dbUsers = await _userRepository.GetRoomUsers(roomId);
 
+        Room room = await _userRepository.GetRoomById(roomId);
+
         return MapUserList(dbUsers, new Room
         {
-            RoomId = roomId,
-            RoomName = roomName
+            RoomId = room.RoomId,
+            RoomName = room.RoomName
         });
     }
-    
+
+    public async Task<ErrorOr<UserResponse>> GetUserByConnectionId(string connectionId)
+    {
+        User user = await _userRepository.GetUserByConnectionId(connectionId);
+        Room room = await _userRepository.GetRoomById(user.RoomId);
+        
+        return MapUserResponse(user, room);
+    }
+
+
     private List<Error> ConvertValidationErrorToError(List<ValidationFailure> failures)
     {
         return failures.ConvertAll(

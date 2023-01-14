@@ -32,13 +32,14 @@ public class ChatHub : Hub
              var user = result.Value;
              await Groups.AddToGroupAsync(Context.ConnectionId, user.RoomId);
              await SendUserData(user);
-             await SendAllRoomMessages(user.RoomId);
+             await SendUserList(user.RoomId);
              await SendMessageToRoom(new SendMessageRequest(
                  user.UserId,
                  user.RoomId,
                  $"User { user.Username } has joined the room",
                  DateTime.UtcNow,
                  false));
+             await SendAllRoomMessages(user.RoomId);
          }
          else
          {
@@ -47,7 +48,44 @@ public class ChatHub : Hub
          }
      }
 
-     public async Task SendMessageToRoom(SendMessageRequest request)
+     public async Task SendMessage(string message)
+     {
+         ErrorOr<UserResponse> result = await _userService
+             .GetUserByConnectionId(Context.ConnectionId);
+         
+         if (!result.IsError)
+         {
+             var user = result.Value;
+             await SendMessageToRoom(new SendMessageRequest(
+                 user.UserId,
+                 user.RoomId,
+                 message,
+                 DateTime.UtcNow,
+                 true));
+         }
+         else
+         {
+             await Clients.Client(Context.ConnectionId)
+                 .SendAsync("ReceiveError", Problem(result.Errors));
+         }
+         
+     }
+
+     public async Task SendAllRoomMessages(string roomId)
+     {
+         ErrorOr<List<MessageResponse>> result = await _messageService.GetAllRoomMessages(roomId);
+
+         if (result.IsError)
+         {
+             await Clients.Client(Context.ConnectionId).SendAsync("ReceiveError", Problem(result.Errors));
+         }
+         else
+         {
+             await Clients.Client(Context.ConnectionId).SendAsync("ReceiveRoomMessages", result.Value);
+         }
+     }
+     
+     private async Task SendMessageToRoom(SendMessageRequest request)
      {
          ErrorOr<MessageResponse> result = await _messageService.SaveMessage(
              new SaveMessageRequest(
@@ -65,14 +103,23 @@ public class ChatHub : Hub
          else
          {
              await Clients.Client(Context.ConnectionId)
-                 .SendAsync("ReceiveMessage", Problem(result.Errors));
+                 .SendAsync("ReceiveError", Problem(result.Errors));
          }
      }
 
-     public async Task SendAllRoomMessages(string roomId)
+     public async Task SendUserList(string roomId)
      {
-         ErrorOr<List<MessageResponse>> messages = await _messageService.GetAllRoomMessages(roomId);
-         await Clients.Client(Context.ConnectionId).SendAsync("ReceiveAllRoomMessages", messages);
+         ErrorOr<List<UserResponse>> result = await _userService.GetUserList(roomId);
+
+         if (!result.IsError)
+         {
+             await Clients.Groups(roomId).SendAsync("ReceiveUserList", result.Value);
+         }
+         else
+         {
+             await Clients.Client(Context.ConnectionId)
+                 .SendAsync("ReceiveError", result.Errors);
+         }
      }
 
      public override async Task OnDisconnectedAsync(Exception? exception)
@@ -120,7 +167,7 @@ public class ChatHub : Hub
          {
              Status = statusCode,
              Title = error.Description,
-             Type = type
+             Type = type,
          };
      }
 
