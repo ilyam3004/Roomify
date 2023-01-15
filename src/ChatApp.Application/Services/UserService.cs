@@ -74,14 +74,25 @@ public class UserService : IUserService
 
     public async Task<ErrorOr<UserResponse>> GetUserByConnectionId(string connectionId)
     {
-        User user = await _userRepository.GetUserByConnectionId(connectionId);
-        Room room = await _userRepository.GetRoomById(user.RoomId);
-        
+        User? user = await _userRepository.GetUserByConnectionIdOrNull(connectionId);
+
+        if (user is null)
+        {
+            return Errors.User.UserNotFound;
+        }
+
+        Room? room = await _userRepository.GetRoomById(user.RoomId);
+
+        if (room is null)
+        {
+            return Errors.Room.RoomNotFound;
+        }
+
         return MapUserResponse(user, room);
     }
 
 
-    private List<Error> ConvertValidationErrorToError(List<ValidationFailure> failures)
+    private static List<Error> ConvertValidationErrorToError(List<ValidationFailure> failures)
     {
         return failures.ConvertAll(
             validationFaliure => Error.Validation(
@@ -92,11 +103,8 @@ public class UserService : IUserService
     private List<UserResponse> MapUserList(List<User> dbUsers, Room room)
     {
         List<UserResponse> userList = new();
-
-        foreach (var user in dbUsers)
-        {
-            userList.Add(MapUserResponse(user, room));
-        }
+        
+        dbUsers.ForEach(user => { userList.Add(MapUserResponse(user, room)); });
 
         return userList;
     }

@@ -18,12 +18,13 @@ public class UserRepository : IUserRepository
 
     public async Task<User> AddUser(User user)
     {
-        var query = "INSERT INTO [User] (UserId, Username, ConnectionId, RoomId) VALUES (@UserId, @Username, @ConnectionId, @RoomId)";
+        var query =
+            "INSERT INTO [User] (UserId, Username, ConnectionId, RoomId) VALUES (@UserId, @Username, @ConnectionId, @RoomId)";
 
         using var connection = _dbContext.CreateConnection();
         await connection.ExecuteAsync(query, user);
         var dbUser = await GetUserById(user.UserId);
-        
+
         return dbUser;
     }
 
@@ -32,8 +33,8 @@ public class UserRepository : IUserRepository
         var query = "SELECT * FROM [User] WHERE UserId = @userId";
 
         using var connection = _dbContext.CreateConnection();
-        var user = await connection.QueryFirstOrDefaultAsync<User>(query, new { userId });
-        
+        var user = await connection.QueryFirstOrDefaultAsync<User>(query, new {userId});
+
         return user;
     }
 
@@ -54,7 +55,7 @@ public class UserRepository : IUserRepository
 
         using var connection = _dbContext.CreateConnection();
         await connection.ExecuteAsync(query, room);
-        
+
         return await GetRoomById(room.RoomId);
     }
 
@@ -67,16 +68,14 @@ public class UserRepository : IUserRepository
 
         return users.ToList();
     }
-    
-    public async Task<Room> GetRoomById(string roomId)
+
+    public async Task<Room?> GetRoomById(string roomId)
     {
         var query = "SELECT * FROM Room WHERE RoomId = @RoomId";
 
-        using (var connection = _dbContext.CreateConnection())
-        {
-            Room room = await connection.QueryFirstOrDefaultAsync<Room>(query, new { roomId });
-            return room;
-        }
+        using var connection = _dbContext.CreateConnection();
+        Room? room = await connection.QueryFirstOrDefaultAsync<Room>(query, new {roomId});
+        return room;
     }
 
     public async Task<bool> UserExists(string username, string roomId)
@@ -85,18 +84,18 @@ public class UserRepository : IUserRepository
 
         using var connection = _dbContext.CreateConnection();
         int count = await connection
-            .QueryFirstOrDefaultAsync<int>(query, 
-                new { Username = username, RoomId = roomId });
-            
+            .QueryFirstOrDefaultAsync<int>(query,
+                new {Username = username, RoomId = roomId});
+
         return count != 0;
     }
 
-    public async Task<User> GetUserByConnectionId(string connectionId)
+    public async Task<User?> GetUserByConnectionIdOrNull(string connectionId)
     {
         string query = "SELECT * FROM [User] WHERE ConnectionId = @ConnectionId";
 
         using var connection = _dbContext.CreateConnection();
-        User user = await connection.QueryFirstOrDefaultAsync<User>(query, new {ConnectionId = connectionId});
+        User? user = await connection.QueryFirstOrDefaultAsync<User>(query, new {ConnectionId = connectionId});
         return user;
     }
 
@@ -106,8 +105,8 @@ public class UserRepository : IUserRepository
         var query = "SELECT COUNT(*) FROM [User] WHERE UserId = @UserId";
 
         using var connection = _dbContext.CreateConnection();
-        int count = await connection.QueryFirstOrDefaultAsync<int>(query, 
-            new { UserId = userId });
+        int count = await connection.QueryFirstOrDefaultAsync<int>(query,
+            new {UserId = userId});
 
         return count != 0;
     }
@@ -117,9 +116,9 @@ public class UserRepository : IUserRepository
         string removeUserQuery = "DELETE FROM [User] WHERE UserId = @UserId";
 
         using var connection = _dbContext.CreateConnection();
-        
-        await connection.ExecuteAsync(removeUserQuery, 
-            new { UserId = userId });
+
+        await connection.ExecuteAsync(removeUserQuery,
+            new {UserId = userId});
 
         await RemoveRoomIfEmpty(await GetRoomIdByUserId(userId));
 
@@ -132,8 +131,8 @@ public class UserRepository : IUserRepository
 
         var connection = _dbContext.CreateConnection();
 
-        string roomId = await connection.QueryFirstOrDefaultAsync<string>(query, 
-            new { UserId = userId });
+        string roomId = await connection.QueryFirstOrDefaultAsync<string>(query,
+            new {UserId = userId});
 
         return roomId;
     }
@@ -144,7 +143,7 @@ public class UserRepository : IUserRepository
 
         using var connection = _dbContext.CreateConnection();
         int count = await connection.QueryFirstOrDefaultAsync<int>(query,
-            new { RoomId = roomId });
+            new {RoomId = roomId});
 
         return count != 0;
     }
@@ -155,20 +154,20 @@ public class UserRepository : IUserRepository
 
         using var connection = _dbContext.CreateConnection();
         Room room = await connection.QueryFirstOrDefaultAsync<Room>(
-            query, new { RoomName = roomName });
-        
+            query, new {RoomName = roomName});
+
         return room;
     }
-    
+
     private async Task RemoveRoomIfEmpty(string roomId)
     {
         var messagesDeleted = await _messageRepository.RemoveAllMessagesFromRoom(roomId);
-        
+
         string query = "SELECT COUNT(*) FROM [User] WHERE RoomId = @RoomId";
 
         using var connection = _dbContext.CreateConnection();
-        int count = await connection.QueryFirstOrDefaultAsync<int>(query, 
-            new { RoomId = roomId });
+        int count = await connection.QueryFirstOrDefaultAsync<int>(query,
+            new {RoomId = roomId});
 
         if (count == 0 && messagesDeleted)
             await RemoveRoom(roomId);
@@ -179,7 +178,7 @@ public class UserRepository : IUserRepository
         string query = "DELETE FROM Room WHERE RoomId = @RoomId";
 
         using var connection = _dbContext.CreateConnection();
-        await connection.ExecuteAsync(query, new { RoomId = roomId });
+        await connection.ExecuteAsync(query, new {RoomId = roomId});
     }
 
     private async Task<bool> RoomExistsByRoomName(string roomName)
@@ -188,7 +187,8 @@ public class UserRepository : IUserRepository
 
         using var connection = _dbContext.CreateConnection();
         int count = await connection
-            .QueryFirstOrDefaultAsync<int>(query, new { RoomName = roomName  });
+            .QueryFirstOrDefaultAsync<int>(query, new {RoomName = roomName});
+        
         return count != 0;
     }
 }
