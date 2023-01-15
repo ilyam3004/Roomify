@@ -18,7 +18,7 @@ public class ChatHub : Hub
          _userService = userService;
          _messageService = messageService;
      }
-     
+
      public async Task JoinRoom(JoinUserRequest request)
      {
          ErrorOr<UserResponse> result = await _userService.AddUserToRoom(
@@ -44,11 +44,11 @@ public class ChatHub : Hub
          else
          {
              await Clients.Client(Context.ConnectionId)
-                 .SendAsync("ReceiveError", Problem(result.Errors));
+                 .SendAsync("ReceiveError", GenerateProblem(result.Errors));
          }
      }
-
-     public async Task SendMessage(string message)
+     
+     public async Task SendUserMessage(string message)
      {
          ErrorOr<UserResponse> result = await _userService
              .GetUserByConnectionId(Context.ConnectionId);
@@ -56,6 +56,7 @@ public class ChatHub : Hub
          if (!result.IsError)
          {
              var user = result.Value;
+             
              await SendMessageToRoom(new SendMessageRequest(
                  user.UserId,
                  user.RoomId,
@@ -66,18 +67,18 @@ public class ChatHub : Hub
          else
          {
              await Clients.Client(Context.ConnectionId)
-                 .SendAsync("ReceiveError", Problem(result.Errors));
+                 .SendAsync("ReceiveError", GenerateProblem(result.Errors));
          }
          
      }
-
+     
      public async Task SendAllRoomMessages(string roomId)
      {
          ErrorOr<List<MessageResponse>> result = await _messageService.GetAllRoomMessages(roomId);
-
+         
          if (result.IsError)
          {
-             await Clients.Client(Context.ConnectionId).SendAsync("ReceiveError", Problem(result.Errors));
+             await Clients.Client(Context.ConnectionId).SendAsync("ReceiveError", GenerateProblem(result.Errors));
          }
          else
          {
@@ -103,7 +104,7 @@ public class ChatHub : Hub
          else
          {
              await Clients.Client(Context.ConnectionId)
-                 .SendAsync("ReceiveError", Problem(result.Errors));
+                 .SendAsync("ReceiveError", GenerateProblem(result.Errors));
          }
      }
 
@@ -133,7 +134,7 @@ public class ChatHub : Hub
              .SendAsync("ReceiveUserData", response);
      }
 
-     private ProblemDetails Problem(List<Error> errors)
+     private ProblemDetails GenerateProblem(List<Error> errors)
      {
          if (errors.All(error => error.Type == ErrorType.Validation))
          {
@@ -145,10 +146,10 @@ public class ChatHub : Hub
              return new ProblemDetails();
          }
 
-         return Problem(errors[0]);
+         return GenerateProblem(errors[0]);
      }
 
-     private ProblemDetails Problem(Error error)
+     private ProblemDetails GenerateProblem(Error error)
      {
          var statusCode = error.Type switch
          {
@@ -163,6 +164,7 @@ public class ChatHub : Hub
              ErrorType.NotFound => "https://www.rfc-editor.org/rfc/rfc7231#section-6.5.4",
              _ => "https://www.rfc-editor.org/rfc/rfc7231#section-6.6.1"
          };
+         
          return new ProblemDetails
          {
              Status = statusCode,
