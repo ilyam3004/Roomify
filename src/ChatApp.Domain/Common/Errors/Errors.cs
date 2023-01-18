@@ -35,5 +35,9 @@ public partial class Errors
         public static Error RoomNotFound => Error.Conflict(
             "Room.RoomNotFound",
             "Room not found");
+
+        public static Error RoomDataRemoved => Error.Unexpected(
+            "Room.RoomDataRemoved",
+            "All room data removed");
     }
 }

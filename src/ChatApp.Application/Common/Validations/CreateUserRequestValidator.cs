@@ -14,7 +14,7 @@ public class CreateUserRequestValidator : AbstractValidator<CreateUserRequest>
 
         RuleFor(u => u.RoomName)
             .NotNull()
-            .Length(5, 30)
+            .Length(4, 30)
             .WithMessage("The length of RoomName should be in range between 5 and 30 characters");
 
         RuleFor(u => u.ConnectionId)

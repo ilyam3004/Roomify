@@ -59,12 +59,6 @@ public class MessageService : IMessageService
         return deleted ? "Message successfully deleted" : Errors.Message.MessagesIsNotRemoved;
     }
 
-    public async Task<ErrorOr<string>> RemoveAllMessagesFromRoom(string roomId)
-    {
-        bool deleted = await _messageRepository.RemoveAllMessagesFromRoom(roomId);
-        return deleted ? "Chat successfully deleted" : Errors.Message.MessagesIsNotRemoved;
-    }
-
     public async Task<ErrorOr<List<MessageResponse>>> GetAllRoomMessages(string roomId)
     {
         List<Message> dbMessages = await _messageRepository.GetAllRoomMessages(roomId);

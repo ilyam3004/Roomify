@@ -16,8 +16,8 @@ public class MessageRepository : IMessageRepository
 
     public async Task<Message> SaveMessage(Message message)
     {
-        string query = "INSERT INTO Message (MessageId, UserId, RoomId, Text, Date, FromUser) " +
-                    "VALUES (@MessageId, @UserId, @RoomId, @Text, @Date, @FromUser)";
+        string query = "INSERT INTO Message (MessageId, UserId, RoomId, Text, Date, FromUser) " + 
+                       "VALUES (@MessageId, @UserId, @RoomId, @Text, @Date, @FromUser)";
 
         using var connection = _dbContext.CreateConnection();
         await connection.ExecuteAsync(query, message);
@@ -35,14 +35,12 @@ public class MessageRepository : IMessageRepository
         return !(await MessageExists(messageId));
     }
 
-    public async Task<bool> RemoveAllMessagesFromRoom(string roomId)
+    public async Task RemoveAllMessagesFromRoom(string roomId)
     {
         string query = "DELETE FROM Message WHERE RoomId = @RoomId";
         
         using var connection = _dbContext.CreateConnection();
         await connection.ExecuteAsync(query, new {RoomId = roomId});
-
-        return !(await MessagesExistsInRoom(roomId));
     }
 
     public async Task<List<Message>> GetAllRoomMessages(string roomId)
@@ -54,17 +52,6 @@ public class MessageRepository : IMessageRepository
             .QueryAsync<Message>(query, new {RoomId = roomId});
         
         return messages.ToList();
-    }
-
-    private async Task<bool> MessagesExistsInRoom(string roomId)
-    {
-        string query = "SELECT COUNT(*) FROM Message WHERE RoomId = @RoomId";
-
-        using var connection = _dbContext.CreateConnection();
-        int count = await connection
-            .QueryFirstOrDefaultAsync<int>(query, new {RoomId = roomId});
-
-        return count != 0;
     }
     
     private async Task<bool> MessageExists(string messageId)

@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using ErrorOr;
 using ChatApp.Application.Models.Requests;
 using ChatApp.Application.Models.Responses;
@@ -47,7 +48,7 @@ public class ChatHub : Hub
                  .SendAsync("ReceiveError", GenerateProblem(result.Errors));
          }
      }
-     
+
      public async Task SendUserMessage(string message)
      {
          ErrorOr<UserResponse> result = await _userService
@@ -125,7 +126,28 @@ public class ChatHub : Hub
 
      public override async Task OnDisconnectedAsync(Exception? exception)
      {
-         await base.OnDisconnectedAsync(exception);
+         ErrorOr<UserResponse> result = await _userService
+             .RemoveUserFromRoom(Context.ConnectionId);
+
+         if (!result.IsError)
+         {
+             UserResponse user = result.Value;
+             await Groups.RemoveFromGroupAsync(Context.ConnectionId, user.RoomId);
+             await SendUserList(user.RoomId);
+             await SendMessageToRoom(new SendMessageRequest(
+                 user.UserId,
+                 user.RoomId,
+                 $"User { user.Username } has left the room",
+                 DateTime.UtcNow,
+                 false));
+         }
+         else
+         {
+             if (result.FirstError.Type != ErrorType.Unexpected)
+             {
+                 await Clients.Client(Context.ConnectionId).SendAsync("ReceiveError", result.Errors);
+             }
+         }
      }
 
      public async Task SendUserData(UserResponse response)
