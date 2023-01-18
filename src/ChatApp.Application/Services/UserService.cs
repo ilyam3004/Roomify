@@ -23,47 +23,64 @@ public class UserService : IUserService
     public async Task<ErrorOr<UserResponse>> AddUserToRoom(CreateUserRequest request)
     {
         var validateResult = await _userValidator.ValidateAsync(request);
-        
+
         if (validateResult.IsValid)
-        {   
+        {
             var room = await _userRepository.CreateRoomIfNotExists(request.RoomName);
-        
+
             if (await _userRepository.UserExists(request.Username, room.RoomId))
             {
                 return Errors.User.DuplicateUsername;
             }
-            
+
             var dbUser = await _userRepository.AddUser(new User
             {
                 UserId = Guid.NewGuid().ToString(),
                 Username = request.Username,
                 RoomId = room.RoomId,
-                ConnectionId = request.ConnectionId
+                ConnectionId = request.ConnectionId,
+                HasLeft = false
             });
 
             return MapUserResponse(dbUser, room);
         }
-        
+
         return ConvertValidationErrorToError(validateResult.Errors);
     }
 
-    public async Task<ErrorOr<string>> RemoveUserFromRoom(string userId)
+    public async Task<ErrorOr<UserResponse>> RemoveUserFromRoom(string connectionId)
     {
-        if (!await _userRepository.UserExists(userId))
+        User? user = await _userRepository.GetUserByConnectionIdOrNull(connectionId);
+        if (user is null)
         {
             return Errors.User.UserNotFound;
         }
 
-        bool userRemoved = await _userRepository.RemoveUserFromRoom(userId);
+        Room? room = await _userRepository.GetRoomById(user.RoomId);
+        if (room is null)
+        {
+            return Errors.Room.RoomNotFound;
+        }
 
-        return userRemoved ? "User removed successfully" : Errors.User.UserNotRemoved;
+        bool dataRemoved = await _userRepository.RemoveRoomDataIfEmpty(user.RoomId, user.UserId);
+        if (dataRemoved)
+        {
+            return Errors.Room.RoomDataRemoved;
+        }
+
+        return MapUserResponse(user, room);
     }
 
     public async Task<ErrorOr<List<UserResponse>>> GetUserList(string roomId)
     {
         List<User> dbUsers = await _userRepository.GetRoomUsers(roomId);
 
-        Room room = await _userRepository.GetRoomById(roomId);
+        Room? room = await _userRepository.GetRoomById(roomId);
+
+        if (room is null)
+        {
+            return Errors.Room.RoomNotFound;
+        }
 
         return MapUserList(dbUsers, new Room
         {
@@ -103,13 +120,12 @@ public class UserService : IUserService
     private List<UserResponse> MapUserList(List<User> dbUsers, Room room)
     {
         List<UserResponse> userList = new();
-        
+
         dbUsers.ForEach(user => { userList.Add(MapUserResponse(user, room)); });
 
         return userList;
     }
-    
-    
+
 
     private UserResponse MapUserResponse(User user, Room room)
     {

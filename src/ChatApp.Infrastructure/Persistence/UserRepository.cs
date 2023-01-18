@@ -19,7 +19,7 @@ public class UserRepository : IUserRepository
     public async Task<User> AddUser(User user)
     {
         var query =
-            "INSERT INTO [User] (UserId, Username, ConnectionId, RoomId) VALUES (@UserId, @Username, @ConnectionId, @RoomId)";
+            "INSERT INTO [User] (UserId, Username, ConnectionId, RoomId, HasLeft) VALUES (@UserId, @Username, @ConnectionId, @RoomId, @HasLeft)";
 
         using var connection = _dbContext.CreateConnection();
         await connection.ExecuteAsync(query, user);
@@ -61,7 +61,7 @@ public class UserRepository : IUserRepository
 
     public async Task<List<User>> GetRoomUsers(string roomId)
     {
-        var query = "SELECT * FROM [User] WHERE RoomId = @RoomId";
+        var query = "SELECT * FROM [User] WHERE RoomId = @RoomId AND HasLeft = 'FALSE'";
 
         using var connection = _dbContext.CreateConnection();
         IEnumerable<User> users = await connection.QueryAsync<User>(query, new {RoomId = roomId});
@@ -80,7 +80,7 @@ public class UserRepository : IUserRepository
 
     public async Task<bool> UserExists(string username, string roomId)
     {
-        var query = "SELECT COUNT(*) FROM [User] WHERE Username = @Username AND RoomId = @RoomId";
+        var query = "SELECT COUNT(*) FROM [User] WHERE Username = @Username AND RoomId = @RoomId AND HasLeft = 'FALSE'";
 
         using var connection = _dbContext.CreateConnection();
         int count = await connection
@@ -111,32 +111,6 @@ public class UserRepository : IUserRepository
         return count != 0;
     }
 
-    public async Task<bool> RemoveUserFromRoom(string userId)
-    {
-        string removeUserQuery = "DELETE FROM [User] WHERE UserId = @UserId";
-
-        using var connection = _dbContext.CreateConnection();
-
-        await connection.ExecuteAsync(removeUserQuery,
-            new {UserId = userId});
-
-        await RemoveRoomIfEmpty(await GetRoomIdByUserId(userId));
-
-        return !(await UserExists(userId));
-    }
-
-    private async Task<string> GetRoomIdByUserId(string userId)
-    {
-        string query = "SELECT RoomId FROM [User] WHERE UserId = @UserId";
-
-        var connection = _dbContext.CreateConnection();
-
-        string roomId = await connection.QueryFirstOrDefaultAsync<string>(query,
-            new {UserId = userId});
-
-        return roomId;
-    }
-
     public async Task<bool> RoomExists(string roomId)
     {
         string query = "SELECT COUNT(*) FROM Room WHERE RoomId = @RoomId";
@@ -147,6 +121,8 @@ public class UserRepository : IUserRepository
 
         return count != 0;
     }
+
+
 
     private async Task<Room> GetRoomByRoomName(string roomName)
     {
@@ -159,18 +135,41 @@ public class UserRepository : IUserRepository
         return room;
     }
 
-    private async Task RemoveRoomIfEmpty(string roomId)
+    public async Task<bool> RemoveRoomDataIfEmpty(string roomId, string userId)
     {
-        var messagesDeleted = await _messageRepository.RemoveAllMessagesFromRoom(roomId);
-
-        string query = "SELECT COUNT(*) FROM [User] WHERE RoomId = @RoomId";
+        string query = "SELECT COUNT(*) FROM [User] WHERE RoomId = @RoomId AND HasLeft = 'FALSE'";
 
         using var connection = _dbContext.CreateConnection();
         int count = await connection.QueryFirstOrDefaultAsync<int>(query,
             new {RoomId = roomId});
 
-        if (count == 0 && messagesDeleted)
+        if (count == 1)
+        {
+            await _messageRepository.RemoveAllMessagesFromRoom(roomId);
+            await RemoveUser(userId);
             await RemoveRoom(roomId);
+            
+            return !(await RoomExists(roomId));
+        }
+        await UpdateUserStatusToHasLeft(userId);
+
+        return false;
+    }
+
+    private async Task RemoveUser(string userId)
+    {
+        var query = "DELETE FROM [User] WHERE UserId = @UserId";
+
+        var connection = _dbContext.CreateConnection();
+        await connection.ExecuteAsync(query, new { UserId = userId });
+    }
+
+    public async Task UpdateUserStatusToHasLeft(string userId)
+    {
+        string query = "UPDATE [User] SET HasLeft = 'TRUE' WHERE UserId = @UserId";
+
+        using var connection = _dbContext.CreateConnection();
+        await connection.ExecuteAsync(query, new {UserId = userId});
     }
 
     private async Task RemoveRoom(string roomId)
