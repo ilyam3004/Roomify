@@ -38,7 +38,7 @@ public class UserRepository : IUserRepository
         return user;
     }
 
-    public async Task<Room> CreateRoomIfNotExists(string roomName)
+    public async Task<Room?> CreateRoomIfNotExists(string roomName)
     {
         if (await RoomExistsByRoomName(roomName))
         {
@@ -146,7 +146,7 @@ public class UserRepository : IUserRepository
         if (count == 1)
         {
             await _messageRepository.RemoveAllMessagesFromRoom(roomId);
-            await RemoveUser(userId);
+            await RemoveAllUsersFromRoom(roomId);
             await RemoveRoom(roomId);
             
             return !(await RoomExists(roomId));
@@ -156,12 +156,12 @@ public class UserRepository : IUserRepository
         return false;
     }
 
-    private async Task RemoveUser(string userId)
+    private async Task RemoveAllUsersFromRoom(string roomId)
     {
-        var query = "DELETE FROM [User] WHERE UserId = @UserId";
+        var query = "DELETE FROM [User] WHERE RoomId = @RoomId";
 
         var connection = _dbContext.CreateConnection();
-        await connection.ExecuteAsync(query, new { UserId = userId });
+        await connection.ExecuteAsync(query, new { RoomId = roomId });
     }
 
     public async Task UpdateUserStatusToHasLeft(string userId)

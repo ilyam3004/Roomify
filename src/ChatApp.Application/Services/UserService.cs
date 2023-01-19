@@ -26,7 +26,11 @@ public class UserService : IUserService
 
         if (validateResult.IsValid)
         {
-            var room = await _userRepository.CreateRoomIfNotExists(request.RoomName);
+            Room? room = await _userRepository.CreateRoomIfNotExists(request.RoomName);
+            if (room is null)
+            {
+                return Errors.Room.RoomNotCreated;
+            }
 
             if (await _userRepository.UserExists(request.Username, room.RoomId))
             {

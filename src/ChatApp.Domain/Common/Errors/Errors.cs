@@ -39,5 +39,9 @@ public partial class Errors
         public static Error RoomDataRemoved => Error.Unexpected(
             "Room.RoomDataRemoved",
             "All room data removed");
+
+        public static Error RoomNotCreated => Error.Unexpected(
+            "Room.RoomNotCreated",
+            "Room not created because of database error");
     }
 }
