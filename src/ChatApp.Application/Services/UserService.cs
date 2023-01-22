@@ -11,6 +11,7 @@ namespace ChatApp.Application.Services;
 
 public class UserService : IUserService
 {
+    
     private readonly IValidator<CreateUserRequest> _userValidator;
     private readonly IUserRepository _userRepository;
 
