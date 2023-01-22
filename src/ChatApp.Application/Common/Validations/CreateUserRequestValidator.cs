@@ -9,14 +9,22 @@ public class CreateUserRequestValidator : AbstractValidator<CreateUserRequest>
     {
         RuleFor(u => u.Username)
             .NotNull()
-            .Length(3, 30)
-            .WithMessage("The length of username should be in range between 3 and 30 characters");
+            .Length(3, 10)
+            .WithMessage("Username should be in range between 3 and 30 characters")
+            .Matches(@"^[A-Za-z\d]+$")
+            .WithMessage("Username must not contain any special characters or spaces.")
+            .Matches("[a-z]")
+            .WithMessage("Username must contain one or more lowercase letters.");
 
         RuleFor(u => u.RoomName)
             .NotNull()
-            .Length(4, 30)
-            .WithMessage("The length of RoomName should be in range between 5 and 30 characters");
-
+            .Length(3, 10)
+            .WithMessage("RoomName should be in range between 4 and 30 characters")
+            .Matches(@"^[A-Za-z\d]+$")
+            .WithMessage("RoomName must not contain any special characters or spaces.")
+            .Matches("[a-z]")
+            .WithMessage("RoomName must contain one or more lowercase letters.");
+        
         RuleFor(u => u.ConnectionId)
             .NotNull()
             .NotEmpty()

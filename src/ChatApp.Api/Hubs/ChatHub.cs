@@ -1,4 +1,3 @@
-using System.Text.RegularExpressions;
 using ErrorOr;
 using ChatApp.Application.Models.Requests;
 using ChatApp.Application.Models.Responses;
@@ -209,7 +208,7 @@ public class ChatHub : Hub
          return new ValidationProblemDetails(modelStateDictionary)
          {
              Status = StatusCodes.Status400BadRequest,
-             Type = "https://www.rfc-editor.org/rfc/rfc7231#section-6.5.1", 
+             Type = "https://www.rfc-editor.org/rfc/rfc7231#section-6.5.1",
              Title = "One or more validation errors occured"
          };
      }
