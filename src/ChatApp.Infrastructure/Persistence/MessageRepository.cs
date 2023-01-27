@@ -53,7 +53,7 @@ public class MessageRepository : IMessageRepository
         
         return messages.ToList();
     }
-    
+
     private async Task<bool> MessageExists(string messageId)
     {
         string query = "SELECT COUNT(*) FROM Message WHERE MessageId = @MessageId";
