@@ -8,5 +8,4 @@ public interface IMessageRepository
     Task<bool> RemoveMessageById(string messageId);
     Task RemoveAllMessagesFromRoom(string roomId);
     Task<List<Message>> GetAllRoomMessages(string roomId);
-
 }
