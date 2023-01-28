@@ -125,12 +125,12 @@ public class ChatHub : Hub
 
      public override async Task OnDisconnectedAsync(Exception? exception)
      {
-         ErrorOr<UserResponse> result = await _userService
+         ErrorOr<Deleted> result = await _userService
              .RemoveUserFromRoom(Context.ConnectionId);
 
          if (!result.IsError)
          {
-             UserResponse user = result.Value;
+             Deleted newRes = result.Value;
              await Groups.RemoveFromGroupAsync(Context.ConnectionId, user.RoomId);
              await SendUserList(user.RoomId);
              await SendMessageToRoom(new SendMessageRequest(

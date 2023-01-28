@@ -53,7 +53,7 @@ public class UserService : IUserService
         return ConvertValidationErrorToError(validateResult.Errors);
     }
 
-    public async Task<ErrorOr<UserResponse>> RemoveUserFromRoom(string connectionId)
+    public async Task<ErrorOr<Deleted>> RemoveUserFromRoom(string connectionId)
     {
         User? user = await _userRepository.GetUserByConnectionIdOrNull(connectionId);
         if (user is null)
@@ -67,13 +67,9 @@ public class UserService : IUserService
             return Errors.Room.RoomNotFound;
         }
 
-        bool dataRemoved = await _userRepository.RemoveRoomDataIfEmpty(user.RoomId, user.UserId);
-        if (dataRemoved)
-        {
-            return Errors.Room.RoomDataRemoved;
-        }
+        await _userRepository.RemoveRoomDataIfEmpty(user.RoomId, user.UserId);
 
-        return MapUserResponse(user, room);
+        return Result.Deleted;
     }
 
     public async Task<ErrorOr<List<UserResponse>>> GetUserList(string roomId)
