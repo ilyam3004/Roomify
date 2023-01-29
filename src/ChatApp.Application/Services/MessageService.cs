@@ -52,18 +52,26 @@ public class MessageService : IMessageService
         return ConvertValidationErrorToError(validateResult.Errors);
     }
     
-    public async Task<ErrorOr<string>> RemoveMessage(string messageId)
+    public async Task<ErrorOr<Deleted>> RemoveMessage(RemoveMessageRequest request, string connectionId)
     {
-        bool deleted = await _messageRepository.RemoveMessageById(messageId);
-        
-        return deleted ? "Message successfully deleted" : Errors.Message.MessagesIsNotRemoved;
+        if (connectionId == request.ConnectionId)
+        {
+            await _messageRepository.RemoveMessageById(request.MessageId);
+            return Result.Deleted;
+        }
+
+        return Errors.Message.MessageIsNotRemoved;
     }
 
     public async Task<ErrorOr<List<MessageResponse>>> GetAllRoomMessages(string roomId)
     {
-        List<Message> dbMessages = await _messageRepository.GetAllRoomMessages(roomId);
-        
-        return await MapRoomMessagesResponseResult(dbMessages);
+        if (await _userRepository.RoomExists(roomId))
+        {
+            List<Message> dbMessages = await _messageRepository.GetAllRoomMessages(roomId);   
+            return await MapRoomMessagesResponseResult(dbMessages);
+        }
+
+        return Errors.Room.RoomNotFound;
     }
 
     private List<Error> ConvertValidationErrorToError(List<ValidationFailure> failures)
