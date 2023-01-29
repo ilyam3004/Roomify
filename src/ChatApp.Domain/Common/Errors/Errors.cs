@@ -23,7 +23,7 @@ public partial class Errors
     {
         public static Error MessageIsNotRemoved => Error.Failure(
             "Message.MessageIsNotRemoved",
-            "Message is not removed because of database error");
+            "Message is not removed because you didn't create this message");
         
         public static Error MessagesIsNotRemoved => Error.Failure(
             "Message.MessagesIsNotRemoved",

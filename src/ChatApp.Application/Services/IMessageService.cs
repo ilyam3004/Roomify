@@ -6,6 +6,6 @@ namespace ChatApp.Application.Services;
 public interface IMessageService
 {
     Task<ErrorOr<MessageResponse>> SaveMessage(SaveMessageRequest request);
-    Task<ErrorOr<string>> RemoveMessage(string messageId);
+    Task<ErrorOr<Deleted>> RemoveMessage(RemoveMessageRequest request, string messageId);
     Task<ErrorOr<List<MessageResponse>>> GetAllRoomMessages(string roomId);
 }

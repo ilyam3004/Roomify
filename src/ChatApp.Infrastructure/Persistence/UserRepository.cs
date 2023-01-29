@@ -18,14 +18,12 @@ public class UserRepository : IUserRepository
 
     public async Task<User> AddUser(User user)
     {
-        var query =
-            "INSERT INTO [User] (UserId, Username, ConnectionId, RoomId, HasLeft) VALUES (@UserId, @Username, @ConnectionId, @RoomId, @HasLeft)";
+        var query = "INSERT INTO [User] (UserId, Username, ConnectionId, RoomId, HasLeft) VALUES (@UserId, @Username, @ConnectionId, @RoomId, @HasLeft)";
 
         using var connection = _dbContext.CreateConnection();
         await connection.ExecuteAsync(query, user);
-        var dbUser = await GetUserById(user.UserId);
 
-        return dbUser;
+        return user;
     }
 
     public async Task<User> GetUserById(string userId)
@@ -38,7 +36,7 @@ public class UserRepository : IUserRepository
         return user;
     }
 
-    public async Task<Room?> CreateRoomIfNotExists(string roomName)
+    public async Task<Room> CreateRoomIfNotExists(string roomName)
     {
         if (await RoomExistsByRoomName(roomName))
         {
@@ -56,7 +54,7 @@ public class UserRepository : IUserRepository
         using var connection = _dbContext.CreateConnection();
         await connection.ExecuteAsync(query, room);
 
-        return await GetRoomById(room.RoomId);
+        return room;
     }
 
     public async Task<List<User>> GetRoomUsers(string roomId)
@@ -135,7 +133,7 @@ public class UserRepository : IUserRepository
         return room;
     }
 
-    public async Task<bool> RemoveRoomDataIfEmpty(string roomId, string userId)
+    public async Task RemoveRoomDataIfEmpty(string roomId, string userId)
     {
         string query = "SELECT COUNT(*) FROM [User] WHERE RoomId = @RoomId AND HasLeft = 'FALSE'";
 
@@ -148,12 +146,9 @@ public class UserRepository : IUserRepository
             await _messageRepository.RemoveAllMessagesFromRoom(roomId);
             await RemoveAllUsersFromRoom(roomId);
             await RemoveRoom(roomId);
-            
-            return !(await RoomExists(roomId));
         }
+        
         await UpdateUserStatusToHasLeft(userId);
-
-        return false;
     }
 
     private async Task RemoveAllUsersFromRoom(string roomId)

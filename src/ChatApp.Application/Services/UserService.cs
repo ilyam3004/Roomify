@@ -6,6 +6,7 @@ using ChatApp.Domain.Entities;
 using FluentValidation;
 using ErrorOr;
 using FluentValidation.Results;
+using Microsoft.AspNetCore.Server.HttpSys;
 
 namespace ChatApp.Application.Services;
 
@@ -27,33 +28,32 @@ public class UserService : IUserService
 
         if (validateResult.IsValid)
         {
-            Room? room = await _userRepository.CreateRoomIfNotExists(request.RoomName);
-            if (room is null)
-            {
-                return Errors.Room.RoomNotCreated;
-            }
+            Room room = await _userRepository.CreateRoomIfNotExists(request.RoomName);
 
             if (await _userRepository.UserExists(request.Username, room.RoomId))
             {
                 return Errors.User.DuplicateUsername;
             }
 
-            var dbUser = await _userRepository.AddUser(new User
-            {
+            var userToAdd = new User()
+            {   
                 UserId = Guid.NewGuid().ToString(),
                 Username = request.Username,
-                RoomId = room.RoomId,
                 ConnectionId = request.ConnectionId,
+                RoomId = room.RoomId,
                 HasLeft = false
-            });
+            };
 
+            var dbUser = await _userRepository
+                .AddUser(userToAdd);
+    
             return MapUserResponse(dbUser, room);
         }
 
         return ConvertValidationErrorToError(validateResult.Errors);
     }
 
-    public async Task<ErrorOr<Deleted>> RemoveUserFromRoom(string connectionId)
+    public async Task<ErrorOr<UserResponse>> RemoveUserFromRoom(string connectionId)
     {
         User? user = await _userRepository.GetUserByConnectionIdOrNull(connectionId);
         if (user is null)
@@ -69,7 +69,7 @@ public class UserService : IUserService
 
         await _userRepository.RemoveRoomDataIfEmpty(user.RoomId, user.UserId);
 
-        return Result.Deleted;
+        return MapUserResponse(user, room);
     }
 
     public async Task<ErrorOr<List<UserResponse>>> GetUserList(string roomId)
