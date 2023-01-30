@@ -52,11 +52,23 @@ public class MessageService : IMessageService
         return ConvertValidationErrorToError(validateResult.Errors);
     }
     
-    public async Task<ErrorOr<Deleted>> RemoveMessage(RemoveMessageRequest request, string connectionId)
+    public async Task<ErrorOr<Deleted>> RemoveMessage(RemoveMessageRequest request)
     {
-        if (connectionId == request.ConnectionId)
+        var message = await _messageRepository.GetMessageByIdOrNullIfNotExists(request.MessageId);
+        if (message is null)
         {
-            await _messageRepository.RemoveMessageById(request.MessageId);
+            return Errors.Message.MessageNotFound;
+        }
+
+        var user = await _userRepository.GetUserByConnectionIdOrNull(request.ConnectionId);
+        if (user is null)
+        {
+            return Errors.User.UserNotFound;
+        }
+
+        if (user.UserId == message.UserId)
+        {
+            await _messageRepository.RemoveMessageById(message.MessageId);
             return Result.Deleted;
         }
 

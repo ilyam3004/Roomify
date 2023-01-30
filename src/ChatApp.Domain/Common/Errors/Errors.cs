@@ -28,6 +28,10 @@ public partial class Errors
         public static Error MessagesIsNotRemoved => Error.Failure(
             "Message.MessagesIsNotRemoved",
             "All messages from this chat is not removed because of database error");
+
+        public static Error MessageNotFound => Error.NotFound(
+            "Message.NotFound",
+            "Message not found");
     }
 
     public class Room

@@ -22,17 +22,15 @@ public class MessageRepository : IMessageRepository
         using var connection = _dbContext.CreateConnection();
         await connection.ExecuteAsync(query, message);
 
-        return await GetMessageById(message.MessageId);
+        return await GetMessageByIdOrNullIfNotExists(message.MessageId);
     }
 
-    public async Task<bool> RemoveMessageById(string messageId)
+    public async Task RemoveMessageById(string messageId)
     {
         string query = "DELETE FROM Message WHERE MessageId = @MessageId";
 
         using var connection = _dbContext.CreateConnection();
         await connection.ExecuteAsync(query, new {MessageId = messageId});
-        
-        return !(await MessageExists(messageId));
     }
 
     public async Task RemoveAllMessagesFromRoom(string roomId)
@@ -64,7 +62,7 @@ public class MessageRepository : IMessageRepository
         return count != 0;
     }
     
-    private async Task<Message> GetMessageById(string messageId)
+    public async Task<Message> GetMessageByIdOrNullIfNotExists(string messageId)
     {
         string query = "SELECT * FROM Message WHERE MessageId = @MessageId";
 
