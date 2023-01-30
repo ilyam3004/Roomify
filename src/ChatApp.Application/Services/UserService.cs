@@ -74,14 +74,14 @@ public class UserService : IUserService
 
     public async Task<ErrorOr<List<UserResponse>>> GetUserList(string roomId)
     {
-        List<User> dbUsers = await _userRepository.GetRoomUsers(roomId);
-
         Room? room = await _userRepository.GetRoomById(roomId);
 
         if (room is null)
         {
             return Errors.Room.RoomNotFound;
         }
+        
+        List<User> dbUsers = await _userRepository.GetRoomUsers(roomId);
 
         return MapUserList(dbUsers, new Room
         {
