@@ -10,8 +10,17 @@ src/ChatApp.Domain/obj/
 src/ChatApp.Infrastructure/bin/
 src/ChatApp.Infrastructure/obj/
 
+src/ChatApp.Contracts/bin/
+src/ChatApp.Contracts/obj/
+
 tests/ChatApp.Application.Tests/bin/
 tests/ChatApp.Application.Tests/obj/
+
+tests/ChatApp.Api.Tests/bin/
+tests/ChatApp.Api.Tests/obj/
+
+tests/ChatApp.Domain.Tests/bin/
+tests/ChatApp.Domain.Tests/obj/
 
 tests/ChatApp.Infrastructure.Tests/bin/
 tests/ChatApp.Infrastructure.Tests/obj/
