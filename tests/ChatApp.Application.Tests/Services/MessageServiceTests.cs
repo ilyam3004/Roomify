@@ -1,57 +1,47 @@
-﻿using System.Security.Principal;
-using ChatApp.Application.Common.Interfaces.Persistence;
+﻿using ChatApp.Application.Common.Interfaces.Persistence;
 using ChatApp.Application.Common.Validations;
 using ChatApp.Application.Models.Requests;
 using ChatApp.Application.Services;
 using ChatApp.Domain.Common.Errors;
 using ChatApp.Domain.Entities;
-using ErrorOr;
 using FluentValidation;
+using AutoFixture;
+using ErrorOr;
 using Moq;
 
 namespace ChatApp.Application.Tests.Services;
 
 public class MessageServiceTests
 {
-    private readonly MessageService _messageService;
+    private readonly MessageService _sut;
+    private readonly Fixture _fixture;
     private readonly Mock<IMessageRepository> _messageRepositoryMock = new();
     private readonly Mock<IUserRepository> _userRepositoryMock = new();
     private readonly IValidator<SaveMessageRequest> _messageValidator = new SaveMessageRequestValidator();
 
     public MessageServiceTests()
     {
-        _messageService = new MessageService(_messageRepositoryMock.Object, 
+        _sut = new MessageService(_messageRepositoryMock.Object, 
             _userRepositoryMock.Object, 
             _messageValidator);
+        _fixture = new Fixture();
     }
 
     [Fact]
     public async Task SaveMessage_ShouldReturnMessageResponse()
     {
         //Arrange
-        var userId = Guid.NewGuid().ToString();
-        var request = new SaveMessageRequest(
-            userId, 
-            Guid.NewGuid().ToString(),
-            "Message text",
-            DateTime.UtcNow, 
-            true);
+        var request = _fixture.Create<SaveMessageRequest>();
+        var user = _fixture.Build<User>()
+            .With(u => u.UserId, request.UserId)
+            .Create();
 
         _userRepositoryMock
-            .Setup(x => x.UserExists(userId))
+            .Setup(x => x.UserExists(user.UserId))
             .ReturnsAsync(true);
 
-        var user = new User
-        {
-            UserId = userId,
-            Username = "username",
-            ConnectionId = Guid.NewGuid().ToString(),
-            HasLeft = false,
-            RoomId = Guid.NewGuid().ToString()
-        };
-
         _userRepositoryMock
-            .Setup(x => x.GetUserById(userId))
+            .Setup(x => x.GetUserById(user.UserId))
             .ReturnsAsync(user);
 
         _messageRepositoryMock
@@ -59,7 +49,7 @@ public class MessageServiceTests
             .ReturnsAsync((Message message) => message);
         
         //Act
-        var messageResponse = await _messageService.SaveMessage(request);
+        var messageResponse = await _sut.SaveMessage(request);
 
         //Assert
         Assert.Equal(messageResponse.Value.Username, user.Username);
@@ -70,20 +60,14 @@ public class MessageServiceTests
     public async Task SaveMessage_ShouldReturnError_WhenUserNotExists()
     {
         //Arrange
-        var userId = Guid.NewGuid().ToString();
-        var request = new SaveMessageRequest(
-            userId, 
-            Guid.NewGuid().ToString(),
-            "Message text",
-            DateTime.UtcNow, 
-            true);
+        var request = _fixture.Create<SaveMessageRequest>();
 
         _userRepositoryMock
-            .Setup(x => x.UserExists(userId))
+            .Setup(x => x.UserExists(request.UserId))
             .ReturnsAsync(false);
         
         //Act
-        var messageResponse = await _messageService.SaveMessage(request);
+        var messageResponse = await _sut.SaveMessage(request);
 
         //Assert
         Assert.Equal(Errors.User.UserNotFound, messageResponse.FirstError);
@@ -101,7 +85,7 @@ public class MessageServiceTests
             true);
         
         //Act
-        var messageResponse = await _messageService.SaveMessage(request);
+        var messageResponse = await _sut.SaveMessage(request);
 
         //Assert
         Assert.Equal(Error.Validation().Type, messageResponse.FirstError.Type);
@@ -111,59 +95,32 @@ public class MessageServiceTests
     public async Task GetAllRoomMessages_ShouldReturnListOfMessageResponse()
     {
         //Arrange
-        var roomId = Guid.NewGuid().ToString();
-        var userId = Guid.NewGuid().ToString();
+        var user = _fixture.Create<User>();
 
         _userRepositoryMock
-            .Setup(x => x.RoomExists(roomId))
+            .Setup(x => x.GetUserById(user.UserId))
+            .ReturnsAsync(user);
+
+        _userRepositoryMock
+            .Setup(x => x.UserExists(user.UserId))
             .ReturnsAsync(true);
 
-        var messageList = new List<Message>()
-        {
-            new Message
-            {
-                UserId = userId,
-                MessageId = Guid.NewGuid().ToString(),
-                Date = DateTime.UtcNow,
-                FromUser = true,
-                RoomId = roomId,
-                Text = "message text 1"
-            },
-            new Message
-            {
-                UserId = userId,
-                MessageId = Guid.NewGuid().ToString(),
-                Date = DateTime.UtcNow,
-                FromUser = true,
-                RoomId = roomId,
-                Text = "message text 2"
-            }
-        };
+        _userRepositoryMock
+            .Setup(x => x.RoomExists(user.RoomId))
+            .ReturnsAsync(true);
+
+        var messageList = _fixture.Build<Message>()
+            .With(m => m.UserId, user.UserId)
+            .With(m => m.RoomId, user.RoomId)
+            .CreateMany(2)
+            .ToList();
 
         _messageRepositoryMock
-            .Setup(x => x.GetAllRoomMessages(roomId))
+            .Setup(x => x.GetAllRoomMessages(user.RoomId))
             .ReturnsAsync(messageList);
-            
-
-        _userRepositoryMock
-            .Setup(x => x.UserExists(userId))
-            .ReturnsAsync(true);
-
-        var user = new User
-        {
-            UserId = userId,
-            Username = "username",
-            ConnectionId = Guid.NewGuid().ToString(),
-            HasLeft = false,
-            RoomId = roomId
-        };
-
-        _userRepositoryMock
-            .Setup(x => x.GetUserById(userId))
-            .ReturnsAsync(user);
         
         //Act
-        var messageResponse = await _messageService.GetAllRoomMessages(roomId);
+        var messageResponse = await _sut.GetAllRoomMessages(user.RoomId);
 
         //Assert
         Assert.Equal(messageResponse.Value.Count, messageList.Count);
@@ -182,7 +139,7 @@ public class MessageServiceTests
             .ReturnsAsync(false);
 
         //Act
-        var messageResponse = await _messageService.GetAllRoomMessages(roomId);
+        var messageResponse = await _sut.GetAllRoomMessages(roomId);
 
         //Assert
         Assert.Equal(messageResponse.FirstError, Errors.Room.RoomNotFound);
@@ -192,43 +149,25 @@ public class MessageServiceTests
     public async Task RemoveMessage_ShouldReturnDeleted() 
     {
         //Arrange
-        var connectionId = Guid.NewGuid().ToString();
-        var messageId = Guid.NewGuid().ToString();
-        var userId = Guid.NewGuid().ToString();
-        var roomId = Guid.NewGuid().ToString();
-        
-        var request = new RemoveMessageRequest(messageId, connectionId);
-
-        var message = new Message
-        {
-            UserId = userId,
-            MessageId = Guid.NewGuid().ToString(),
-            Date = DateTime.UtcNow,
-            FromUser = true,
-            RoomId = roomId,
-            Text = "message text 1"
-        };
-
-        _messageRepositoryMock
-            .Setup(x => x.GetMessageByIdOrNullIfNotExists(messageId))
-            .ReturnsAsync(message);
-        
-        var user = new User
-        {
-            UserId = userId,
-            Username = "username",
-            ConnectionId = connectionId,
-            HasLeft = false,
-            RoomId = roomId
-        };
+        var user = _fixture.Create<User>();
 
         _userRepositoryMock
-            .Setup(x => x.GetUserByConnectionIdOrNull(connectionId))
+            .Setup(x => x.GetUserByConnectionIdOrNull(user.ConnectionId))
             .ReturnsAsync(user);
-        
-        
+
+        var message = _fixture.Build<Message>()
+            .With(m => m.UserId, user.UserId)
+            .With(m => m.RoomId, user.RoomId)
+            .Create();
+
+        _messageRepositoryMock
+            .Setup(x => x.GetMessageByIdOrNullIfNotExists(message.MessageId))
+            .ReturnsAsync(message);
+
+        var request = new RemoveMessageRequest(message.MessageId, user.ConnectionId);
+
         //Act
-        var response = await _messageService.RemoveMessage(request);
+        var response = await _sut.RemoveMessage(request);
         
         //Assert 
         Assert.Equal(response.Value, Result.Deleted);
@@ -238,41 +177,24 @@ public class MessageServiceTests
     public async Task RemoveMessage_ShouldReturnError_WhenUserAreNotOwnerOfMessage()
     {
         //Arrange
-        var connectionId = Guid.NewGuid().ToString();
-        var messageId = Guid.NewGuid().ToString();
-        var roomId = Guid.NewGuid().ToString();
-
-        var request = new RemoveMessageRequest(messageId, connectionId);
-
-        var message = new Message
-        {
-            UserId = Guid.NewGuid().ToString(),
-            MessageId = messageId,
-            Date = DateTime.UtcNow,
-            FromUser = true,
-            RoomId = roomId,
-            Text = "message text 1"
-        };
-
-        _messageRepositoryMock
-            .Setup(x => x.GetMessageByIdOrNullIfNotExists(messageId))
-            .ReturnsAsync(message);
-        
-        var user = new User
-        {
-            UserId = Guid.NewGuid().ToString(),
-            Username = "username",
-            ConnectionId = connectionId,
-            HasLeft = false,
-            RoomId = roomId
-        };
+        var user = _fixture.Create<User>();
 
         _userRepositoryMock
-            .Setup(x => x.GetUserByConnectionIdOrNull(connectionId))
+            .Setup(x => x.GetUserByConnectionIdOrNull(user.ConnectionId))
             .ReturnsAsync(user);
 
+        var message = _fixture.Build<Message>()
+            .With(m => m.RoomId, user.RoomId)
+            .Create();
+
+        _messageRepositoryMock
+            .Setup(x => x.GetMessageByIdOrNullIfNotExists(message.MessageId))
+            .ReturnsAsync(message);
+
+        var request = new RemoveMessageRequest(message.MessageId, user.ConnectionId);
+
         //Act
-        var response = await _messageService.RemoveMessage(request);
+        var response = await _sut.RemoveMessage(request);
         
         //Assert 
         Assert.Equal(Errors.Message.MessageIsNotRemoved, response.FirstError);
@@ -282,17 +204,14 @@ public class MessageServiceTests
     public async Task RemoveMessage_ShouldReturnError_WhenMessageNotExists()
     {
         //Arrange
-        var connectionId = Guid.NewGuid().ToString();
-        var messageId = Guid.NewGuid().ToString();
-
-        var request = new RemoveMessageRequest(messageId, connectionId);
+        var request = _fixture.Create<RemoveMessageRequest>();
 
         _messageRepositoryMock
-            .Setup(x => x.GetMessageByIdOrNullIfNotExists(messageId))
+            .Setup(x => x.GetMessageByIdOrNullIfNotExists(request.MessageId))
             .ReturnsAsync(() => null);
 
         //Act
-        var response = await _messageService.RemoveMessage(request);
+        var response = await _sut.RemoveMessage(request);
         
         //Assert 
         Assert.Equal(Errors.Message.MessageNotFound, response.FirstError);
@@ -303,22 +222,13 @@ public class MessageServiceTests
     {
         //Arrange
         var connectionId = Guid.NewGuid().ToString();
-        var messageId = Guid.NewGuid().ToString();
-        
-        var request = new RemoveMessageRequest(messageId, connectionId);
 
-        var message = new Message
-        {
-            UserId = Guid.NewGuid().ToString(),
-            MessageId = Guid.NewGuid().ToString(),
-            Date = DateTime.UtcNow,
-            FromUser = true,
-            RoomId = Guid.NewGuid().ToString(),
-            Text = "message text"
-        };
+        var message = _fixture.Create<Message>();
+
+        var request = new RemoveMessageRequest(message.MessageId, connectionId);
 
         _messageRepositoryMock
-            .Setup(x => x.GetMessageByIdOrNullIfNotExists(messageId))
+            .Setup(x => x.GetMessageByIdOrNullIfNotExists(message.MessageId))
             .ReturnsAsync(message);
 
         _userRepositoryMock
@@ -326,7 +236,7 @@ public class MessageServiceTests
             .ReturnsAsync(() => null);
         
         //Act
-        var response = await _messageService.RemoveMessage(request);
+        var response = await _sut.RemoveMessage(request);
         
         //Assert 
         Assert.Equal(Errors.User.UserNotFound, response.FirstError);
