@@ -1,4 +1,5 @@
 ﻿using ErrorOr;
+using System.Net.NetworkInformation;
 
 namespace ChatApp.Domain.Common.Errors;
 
@@ -10,7 +11,7 @@ public partial class Errors
             "User.DuplicateUsername",
             "User with the same username already exists in this room");
 
-        public static Error UserNotFound => Error.Conflict(
+        public static Error UserNotFound => Error.NotFound(
                 "User.UserNotFound",
                 "User with this userId not found in this room");
 
@@ -36,16 +37,12 @@ public partial class Errors
 
     public class Room
     {
-        public static Error RoomNotFound => Error.Conflict(
+        public static Error RoomNotFound => Error.NotFound(
             "Room.RoomNotFound",
             "Room not found");
 
-        public static Error RoomDataRemoved => Error.Unexpected(
-            "Room.RoomDataRemoved",
-            "All room data removed");
-
-        public static Error RoomNotCreated => Error.Unexpected(
-            "Room.RoomNotCreated",
-            "Room not created because of database error");
+        public static Error RoomIsEmpty => Error.Conflict(
+            "Room.RoomIsEmpty",
+            "Room is empty");
     }
 }
