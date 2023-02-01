@@ -133,7 +133,7 @@ public class UserRepository : IUserRepository
         return room;
     }
 
-    public async Task RemoveRoomDataIfEmpty(string roomId, string userId)
+    public async Task<bool> RemoveRoomDataIfEmpty(string roomId, string userId)
     {
         string query = "SELECT COUNT(*) FROM [User] WHERE RoomId = @RoomId AND HasLeft = 'FALSE'";
 
@@ -146,9 +146,11 @@ public class UserRepository : IUserRepository
             await _messageRepository.RemoveAllMessagesFromRoom(roomId);
             await RemoveAllUsersFromRoom(roomId);
             await RemoveRoom(roomId);
+            return true;
         }
         
         await UpdateUserStatusToHasLeft(userId);
+        return false;
     }
 
     private async Task RemoveAllUsersFromRoom(string roomId)

@@ -67,7 +67,13 @@ public class UserService : IUserService
             return Errors.Room.RoomNotFound;
         }
 
-        await _userRepository.RemoveRoomDataIfEmpty(user.RoomId, user.UserId);
+        bool isRoomEmpty = await _userRepository
+            .RemoveRoomDataIfEmpty(user.RoomId, user.UserId);
+
+        if (isRoomEmpty) 
+        {
+            return Errors.Room.RoomIsEmpty;
+        }
 
         return MapUserResponse(user, room);
     }
