@@ -99,8 +99,8 @@ public class ChatHub : Hub
             async onError => await SendRemovingErrorToClientIfErrorConflict(onError[0]));
     }
 
-    private async Task SendDataToRoomAboutAddingUser(UserResponse response) 
-    { 
+    private async Task SendDataToRoomAboutAddingUser(UserResponse response)
+    {
         await Groups.AddToGroupAsync(Context.ConnectionId, response.RoomId);
         await SendUserData(response);
         await SendUserList(response.RoomId);
