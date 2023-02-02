@@ -28,7 +28,6 @@ public class UserServiceTests
     public async Task GetUserByConnectionId_ShouldReturnUserResponse()
     {
         // Arrange
-
         var user = _fixture.Create<User>();
 
         _userRepositoryMock
