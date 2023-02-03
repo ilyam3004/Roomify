@@ -76,27 +76,6 @@ public class UserServiceTests
     }
 
     [Fact]
-    public async Task GetUserByConnectionId_ShouldReturnError_WhenRoomNotExists()
-    {
-        // Arrange
-        var user = _fixture.Create<User>();
-
-        _userRepositoryMock
-            .Setup(x => x.GetUserByConnectionIdOrNull(user.ConnectionId))
-            .ReturnsAsync(user);
-
-        _userRepositoryMock
-            .Setup(x => x.GetRoomById(user.RoomId))
-            .ReturnsAsync(() => null);
-
-        // Act
-        var userResponse = await _sut.GetUserByConnectionId(user.ConnectionId);
-
-        // Assert
-        Assert.Equal(userResponse.FirstError, Errors.Room.RoomNotFound);
-    }
-
-    [Fact]
     public async Task AddUserToRoom_ShouldReturnUserResponse()
     {
         // Arrange
@@ -222,26 +201,34 @@ public class UserServiceTests
         // Assert
         Assert.Equal(response.FirstError, Errors.User.UserNotFound);
     }
-
+    
     [Fact]
-    public async Task RemoveUserFromRoom_ShouldReturnError_WhenRoomNotExists()
+    public async Task RemoveUserFromRoom_ShouldReturnError_WhenRoomIsEmpty()
     {
-        //Arrange
+        // Arrange
         var user = _fixture.Create<User>();
+
+        var room = _fixture.Build<Room>()
+            .With(r => r.RoomId, user.RoomId)
+            .Create();
+
+        _userRepositoryMock
+            .Setup(u => u.GetRoomById(user.RoomId))
+            .ReturnsAsync(room);
 
         _userRepositoryMock
             .Setup(x => x.GetUserByConnectionIdOrNull(user.ConnectionId))
             .ReturnsAsync(user);
 
         _userRepositoryMock
-            .Setup(x => x.GetRoomById(user.RoomId))
-            .ReturnsAsync(() => null);
+            .Setup(x => x.RemoveRoomDataIfEmpty(user.RoomId, user.UserId))
+            .ReturnsAsync(true);
 
-        //Act
-        var response = await _sut.RemoveUserFromRoom(user.ConnectionId);
+        // Act
+        var userResponse = await _sut.RemoveUserFromRoom(user.ConnectionId);
 
-        //Assert
-        Assert.Equal(response.FirstError, Errors.Room.RoomNotFound);
+        // Assert
+        Assert.Equal(userResponse.FirstError, Errors.Room.RoomIsEmpty);
     }
 
     [Fact]
@@ -267,23 +254,7 @@ public class UserServiceTests
         var response = await _sut.GetUserList(room.RoomId);
         
         //Assert
-        Assert.Equal(response.Value.Count, userList.Count);
-        Assert.Equal(response.Value[1].RoomId, userList[0].RoomId);
-    }
-
-    [Fact]
-    public async Task GetUserList_ShouldReturnError_WhenRoomNotExists()
-    {
-        //Arrange
-        var roomId = Guid.NewGuid().ToString();
-
-        _userRepositoryMock
-            .Setup(x => x.GetRoomById(roomId))
-            .ReturnsAsync(() => null);
-        
-        //Act
-        var response = await _sut.GetUserList(roomId);
-        //Assert
-        Assert.Equal(Errors.Room.RoomNotFound, response.FirstError);
+        Assert.Equal(response.Count, userList.Count);
+        Assert.Equal(response[1].RoomId, userList[0].RoomId);
     }
 }

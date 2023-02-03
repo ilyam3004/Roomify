@@ -61,12 +61,8 @@ public class UserService : IUserService
             return Errors.User.UserNotFound;
         }
 
-        Room? room = await _userRepository.GetRoomById(user.RoomId);
-        if (room is null)
-        {
-            return Errors.Room.RoomNotFound;
-        }
-
+        Room room = await _userRepository.GetRoomById(user.RoomId);
+        
         bool isRoomEmpty = await _userRepository
             .RemoveRoomDataIfEmpty(user.RoomId, user.UserId);
 
@@ -78,15 +74,10 @@ public class UserService : IUserService
         return MapUserResponse(user, room);
     }
 
-    public async Task<ErrorOr<List<UserResponse>>> GetUserList(string roomId)
+    public async Task<List<UserResponse>> GetUserList(string roomId)
     {
-        Room? room = await _userRepository.GetRoomById(roomId);
+        Room room = await _userRepository.GetRoomById(roomId);
 
-        if (room is null)
-        {
-            return Errors.Room.RoomNotFound;
-        }
-        
         List<User> dbUsers = await _userRepository.GetRoomUsers(roomId);
 
         return MapUserList(dbUsers, new Room
@@ -105,12 +96,7 @@ public class UserService : IUserService
             return Errors.User.UserNotFound;
         }
 
-        Room? room = await _userRepository.GetRoomById(user.RoomId);
-
-        if (room is null)
-        {
-            return Errors.Room.RoomNotFound;
-        }
+        Room room = await _userRepository.GetRoomById(user.RoomId);
 
         return MapUserResponse(user, room);
     }

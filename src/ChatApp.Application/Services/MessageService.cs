@@ -75,15 +75,11 @@ public class MessageService : IMessageService
         return Errors.Message.MessageIsNotRemoved;
     }
 
-    public async Task<ErrorOr<List<MessageResponse>>> GetAllRoomMessages(string roomId)
+    public async Task<List<MessageResponse>> GetAllRoomMessages(string roomId)
     {
-        if (await _userRepository.RoomExists(roomId))
-        {
-            List<Message> dbMessages = await _messageRepository.GetAllRoomMessages(roomId);   
-            return await MapRoomMessagesResponseResult(dbMessages);
-        }
-
-        return Errors.Room.RoomNotFound;
+        List<Message> dbMessages = await _messageRepository.GetAllRoomMessages(roomId);   
+        
+        return await MapRoomMessagesResponseResult(dbMessages);
     }
 
     private List<Error> ConvertValidationErrorToError(List<ValidationFailure> failures)
