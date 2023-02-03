@@ -123,26 +123,9 @@ public class MessageServiceTests
         var messageResponse = await _sut.GetAllRoomMessages(user.RoomId);
 
         //Assert
-        Assert.Equal(messageResponse.Value.Count, messageList.Count);
-        Assert.Equal(messageResponse.Value[0].UserId, messageList[1].UserId);
-        Assert.Equal(messageResponse.Value[0].MessageId, messageList[0].MessageId);
-    }
-
-    [Fact]
-    public async Task GetAllRoomMessages_ShouldReturnError_WhenRoomNotExists()
-    {
-        //Arrange
-        var roomId = Guid.NewGuid().ToString();
-        
-        _userRepositoryMock
-            .Setup(x => x.RoomExists(roomId))
-            .ReturnsAsync(false);
-
-        //Act
-        var messageResponse = await _sut.GetAllRoomMessages(roomId);
-
-        //Assert
-        Assert.Equal(messageResponse.FirstError, Errors.Room.RoomNotFound);
+        Assert.Equal(messageResponse.Count, messageList.Count);
+        Assert.Equal(messageResponse[0].UserId, messageList[1].UserId);
+        Assert.Equal(messageResponse[0].MessageId, messageList[0].MessageId);
     }
     
     [Fact]

@@ -51,16 +51,6 @@ public class MessageRepository : IMessageRepository
         
         return messages.ToList();
     }
-
-    private async Task<bool> MessageExists(string messageId)
-    {
-        string query = "SELECT COUNT(*) FROM Message WHERE MessageId = @MessageId";
-
-        using var connection = _dbContext.CreateConnection();
-        int count = await connection.QueryFirstOrDefaultAsync<int>(query, new { messageId });
-        
-        return count != 0;
-    }
     
     public async Task<Message> GetMessageByIdOrNullIfNotExists(string messageId)
     {

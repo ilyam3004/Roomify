@@ -67,12 +67,12 @@ public class UserRepository : IUserRepository
         return users.ToList();
     }
 
-    public async Task<Room?> GetRoomById(string roomId)
+    public async Task<Room> GetRoomById(string roomId)
     {
         var query = "SELECT * FROM Room WHERE RoomId = @RoomId";
 
         using var connection = _dbContext.CreateConnection();
-        Room? room = await connection.QueryFirstOrDefaultAsync<Room>(query, new {roomId});
+        Room room = await connection.QueryFirstOrDefaultAsync<Room>(query, new {roomId});
         return room;
     }
 
@@ -119,8 +119,6 @@ public class UserRepository : IUserRepository
 
         return count != 0;
     }
-
-
 
     private async Task<Room> GetRoomByRoomName(string roomName)
     {

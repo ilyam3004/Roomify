@@ -52,24 +52,18 @@ public class ChatHub : Hub
 
     public async Task SendAllRoomMessages(string roomId)
     {
-        ErrorOr<List<MessageResponse>> result = await _messageService.GetAllRoomMessages(roomId);
-
-        await result.Match(
-            async onValue => await Clients.Client(Context.ConnectionId)
-                                   .SendAsync("ReceiveRoomMessages", onValue),
-            async onError => await Clients.Client(Context.ConnectionId)
-                                   .SendAsync("ReceiveError", GenerateProblem(onError)));
+        List<MessageResponse> result = await _messageService.GetAllRoomMessages(roomId);
+        
+        await Clients.Client(Context.ConnectionId)
+            .SendAsync("ReceiveRoomMessages", result);
     }
 
-    public async Task SendUserList(string roomId)
+    private async Task SendUserList(string roomId)
     {
-        ErrorOr<List<UserResponse>> result = await _userService.GetUserList(roomId);
+        List<UserResponse> result = await _userService.GetUserList(roomId);
 
-        await result.Match(
-            async onValue => await Clients.Groups(roomId)
-                 .SendAsync("ReceiveUserList", onValue),
-            async onError => await Clients.Client(Context.ConnectionId)
-                 .SendAsync("ReceiveError", onError));
+        await Clients.Group(roomId)
+                 .SendAsync("ReceiveUserList", result);
     }
 
     private async Task SendMessageToRoom(SendMessageRequest request)
@@ -96,7 +90,7 @@ public class ChatHub : Hub
 
         await result.Match(
             async onValue => await SendDataToRoomAboutUserLeaving(onValue),
-            async onError => await SendRemovingErrorToClientIfErrorConflict(onError[0]));
+            async onError => await SendRemovingErrorToClientIfErrorNotFound(onError[0]));
     }
 
     private async Task SendDataToRoomAboutAddingUser(UserResponse response)
@@ -124,7 +118,7 @@ public class ChatHub : Hub
             false));
     }
 
-    private async Task SendRemovingErrorToClientIfErrorConflict(Error error) 
+    private async Task SendRemovingErrorToClientIfErrorNotFound(Error error) 
     {
         if (error.Type != ErrorType.Unexpected) 
         {
@@ -159,7 +153,6 @@ public class ChatHub : Hub
         {
             ErrorType.Conflict => StatusCodes.Status409Conflict,
             ErrorType.NotFound => StatusCodes.Status404NotFound,
-            _ => StatusCodes.Status500InternalServerError
         };
 
         var type = error.Type switch

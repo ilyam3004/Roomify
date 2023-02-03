@@ -2,14 +2,12 @@
 using ChatApp.Api.Hubs;
 using AutoFixture;
 using Moq;
-using ErrorOr;
 using ChatApp.Contracts.Rooms;
 using ChatApp.Application.Models.Requests;
 using SignalR_UnitTestingSupportXUnit.Hubs;
 using ChatApp.Application.Models.Responses;
 using ChatApp.Domain.Common.Errors;
-using Microsoft.AspNetCore.Routing.Matching;
-using Microsoft.AspNetCore.SignalR;
+using NuGet.Frameworks;
 using Range = Moq.Range;
 
 namespace ChatApp.Api.Tests.Hubs;
@@ -59,7 +57,7 @@ public class ChatHubTests : HubUnitTestsBase
     }
 
     [Fact]
-    public async Task JoinRoom_ShouldSendErrorToClient_WhenServiceReturnsError()
+    public async Task JoinRoom_ShouldSendErrorToClient_WhenAddUserToRoomReturnsError()
     {
         // Arrange
         var joinUserRequest = _fixture.Create<JoinUserRequest>();
@@ -98,7 +96,7 @@ public class ChatHubTests : HubUnitTestsBase
     }
     
     [Fact]
-    public async Task SendUserMessage_ShouldSendErrorToClient_WhenServiceReturnsError()
+    public async Task SendUserMessage_ShouldSendErrorToClient_WhenGetUserByConnectionIdReturnsError()
     {
         // Arrange
 
@@ -109,6 +107,76 @@ public class ChatHubTests : HubUnitTestsBase
         // Act
         await _sut.SendUserMessage("message");
         
+        //Assert
+        ClientsMock.Verify(c => c.Client(It.IsAny<string>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task SendUserMessage_ShouldSendErrorToClient_WhenSaveMessageReturnsError()
+    {
+        //Arrange
+        var userResponse = _fixture.Create<UserResponse>();
+        string message = "Message text";
+        
+        _userServiceMock
+            .Setup(u => u.GetUserByConnectionId(It.IsAny<string>()))
+            .ReturnsAsync(userResponse);
+
+        _messageServiceMock
+            .Setup(m => m.SaveMessage(It.IsAny<SaveMessageRequest>()))
+            .ReturnsAsync(Errors.User.UserNotFound);
+        
+        //Act
+        await _sut.SendUserMessage(message);
+        
+        //Assert
+        ClientsMock.Verify(c => c.Client(It.IsAny<string>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task OnDisconnectedAsync_ShouldSendDataAboutUserLeavingToRoom_WhenServiceReturnsSuccess()
+    {
+        //Arrange
+        var userList = _fixture.CreateMany<UserResponse>(2).ToList();
+        var userResponse = _fixture.Create<UserResponse>();
+        var messageResponse = _fixture.Create<MessageResponse>();
+        string roomId = Guid.NewGuid().ToString();
+
+        _userServiceMock
+            .Setup(u => u.RemoveUserFromRoom(It.IsAny<string>()))
+            .ReturnsAsync(userResponse);
+
+        _userServiceMock
+            .Setup(u => u.GetUserList(roomId))
+            .ReturnsAsync(userList);
+
+        _messageServiceMock
+            .Setup(m => m.SaveMessage(It.IsAny<SaveMessageRequest>()))
+            .ReturnsAsync(messageResponse);
+
+        //Act
+        await _sut.OnDisconnectedAsync(It.IsAny<Exception>());
+
+        //Assert
+        ClientsMock.Verify(c => 
+            c.Group(It.IsAny<string>()), Times.Between(1, 2, Range.Inclusive));
+    }
+    
+    [Fact]
+    public async Task OnDisconnectedAsync_ShouldSendDataAboutUserLeavingToRoom_WhenServiceReturnsNotFoundError()
+    {
+        //Arrange
+        _userServiceMock
+            .Setup(u => u.RemoveUserFromRoom(It.IsAny<string>()))
+            .ReturnsAsync(Errors.User.UserNotFound);
+        
+        _userServiceMock
+            .Setup(u => u.RemoveUserFromRoom(It.IsAny<string>()))
+            .ReturnsAsync(Errors.User.UserNotFound);
+        
+        //Act
+        await _sut.OnDisconnectedAsync(It.IsAny<Exception>());
+
         //Assert
         ClientsMock.Verify(c => c.Client(It.IsAny<string>()), Times.Once);
     }

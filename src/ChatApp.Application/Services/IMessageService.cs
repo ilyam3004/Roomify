@@ -7,5 +7,5 @@ public interface IMessageService
 {
     Task<ErrorOr<MessageResponse>> SaveMessage(SaveMessageRequest request);
     Task<ErrorOr<Deleted>> RemoveMessage(RemoveMessageRequest request);
-    Task<ErrorOr<List<MessageResponse>>> GetAllRoomMessages(string roomId);
+    Task<List<MessageResponse>> GetAllRoomMessages(string roomId);
 }
