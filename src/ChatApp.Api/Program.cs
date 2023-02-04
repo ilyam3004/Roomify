@@ -16,13 +16,12 @@ var builder = WebApplication.CreateBuilder(args);
 
 var app = builder.Build();
 {
-    app.UseHttpsRedirection();
     app.UseCors(builder => builder
         .WithOrigins("null")
         .AllowAnyHeader()
+        .SetIsOriginAllowed((host) => true)
         .AllowAnyMethod()
-        .AllowCredentials()
-        .AllowAnyOrigin());
+        .AllowCredentials());
     app.MapHub<ChatHub>("/chatHub");
     app.Run();
 }
