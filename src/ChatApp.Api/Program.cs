@@ -1,6 +1,7 @@
 using ChatApp.Api.Hubs;
 using ChatApp.Application;
 using ChatApp.Infrastructure;
+using Microsoft.AspNetCore.Cors.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
 {
@@ -17,11 +18,11 @@ var builder = WebApplication.CreateBuilder(args);
 var app = builder.Build();
 {
     app.UseCors(builder => builder
-        .WithOrigins("null")
-        .AllowAnyHeader()
-        .SetIsOriginAllowed((host) => true)
-        .AllowAnyMethod()
-        .AllowCredentials());
+            .AllowAnyOrigin()
+            .AllowAnyHeader()
+            .AllowCredentials()
+            .AllowAnyMethod()
+            .WithOrigins("http://localhost:3000"));
     app.MapHub<ChatHub>("/chatHub");
     app.Run();
 }
