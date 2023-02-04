@@ -23,5 +23,8 @@ jobs:
       - name: Build
         run: dotnet build ./ChatApp.sln --configuration Release --no-restore
         
+      - name: Test
+        run: dotnet test ./ChatApp.sln --configuration Release
+        
       - name: Publish 
         run: dotnet publish ./ChatApp.sln --configuration Release --no-build
