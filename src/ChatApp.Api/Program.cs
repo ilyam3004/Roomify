@@ -20,9 +20,9 @@ var app = builder.Build();
     app.UseCors(builder => builder
         .WithOrigins("null")
         .AllowAnyHeader()
-        .SetIsOriginAllowed((host) => true)
         .AllowAnyMethod()
-        .AllowCredentials());
+        .AllowCredentials()
+        .AllowAnyOrigin());
     app.MapHub<ChatHub>("/chatHub");
     app.Run();
 }
