@@ -1,7 +1,6 @@
 using ChatApp.Api.Hubs;
 using ChatApp.Application;
 using ChatApp.Infrastructure;
-using Microsoft.AspNetCore.Cors.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
 {
@@ -12,7 +11,8 @@ var builder = WebApplication.CreateBuilder(args);
     
     builder.Services
         .AddCors()
-        .AddSignalR();
+        .AddSignalR()
+        .AddAzureSignalR();
 }
 
 var app = builder.Build();
