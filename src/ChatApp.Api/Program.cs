@@ -18,7 +18,6 @@ var builder = WebApplication.CreateBuilder(args);
 var app = builder.Build();
 {
     app.UseCors(builder => builder
-        .AllowAnyOrigin()
         .AllowAnyHeader()
         .AllowCredentials()
         .SetIsOriginAllowed((host) => true)
