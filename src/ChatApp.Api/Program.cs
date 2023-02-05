@@ -17,11 +17,11 @@ var builder = WebApplication.CreateBuilder(args);
 var app = builder.Build();
 {
     app.UseCors(builder => builder
-        .AllowAnyOrigin()
-        .AllowCredentials()
+        .WithOrigins("null")
         .AllowAnyHeader()
+        .SetIsOriginAllowed((host) => true)
         .AllowAnyMethod()
-        .WithOrigins("https://chat-app-psi-ruby.vercel.app"));
+        .AllowCredentials());
     
     app.MapHub<ChatHub>("/chatHub");
     app.Run();
