@@ -1,7 +1,6 @@
 using ChatApp.Api.Hubs;
 using ChatApp.Application;
 using ChatApp.Infrastructure;
-using Microsoft.Owin.BuilderProperties;
 
 var builder = WebApplication.CreateBuilder(args);
 {
@@ -24,6 +23,7 @@ var app = builder.Build();
             .AllowCredentials()
             .AllowAnyMethod()
             .WithOrigins("http://localhost:3000"));
+    
     app.UseAzureSignalR(routes =>
     {
         routes.MapHub<ChatHub>("/chatHub");
