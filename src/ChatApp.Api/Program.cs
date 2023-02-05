@@ -1,6 +1,7 @@
 using ChatApp.Api.Hubs;
 using ChatApp.Application;
 using ChatApp.Infrastructure;
+using Microsoft.Owin.BuilderProperties;
 
 var builder = WebApplication.CreateBuilder(args);
 {
@@ -12,7 +13,7 @@ var builder = WebApplication.CreateBuilder(args);
     builder.Services
         .AddCors()
         .AddSignalR()
-        .AddAzureSignalR();
+        .AddAzureSignalR("Endpoint=https://chat-app-server.service.signalr.net;AccessKey=NBgFpQSN4/PM4qewDJx8f0ujMbIoteI6zInoRhAhxNw=;Version=1.0;");
 }
 
 var app = builder.Build();
@@ -23,6 +24,9 @@ var app = builder.Build();
             .AllowCredentials()
             .AllowAnyMethod()
             .WithOrigins("http://localhost:3000"));
-    app.MapHub<ChatHub>("/chatHub");
+    app.UseAzureSignalR(routes =>
+    {
+        routes.MapHub<ChatHub>("/chatHub");
+    });
     app.Run();
 }
