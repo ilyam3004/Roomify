@@ -183,18 +183,6 @@ public class ChatHubTests : HubUnitTestsBase
     }
 
     [Fact]
-    public async Task SendImageToRoom_ShouldSendMessageResponseWithImageLink()
-    {
-        // Arrange
-
-
-        // Act
-
-
-        //Assert
-    }
-
-    [Fact]
     public async Task SendImageToRoom_ShouldSendErrorWhenUserNotExists()
     { 
         // Arrange
