@@ -5,7 +5,7 @@ using ChatApp.Infrastructure;
 var builder = WebApplication.CreateBuilder(args);
 {
     builder.Services
-    .AddInfrastructure()
+    .AddInfrastructure(builder)
     .AddApplication()
     .AddControllers();
 

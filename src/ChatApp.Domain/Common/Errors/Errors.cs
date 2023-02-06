@@ -12,7 +12,7 @@ public partial class Errors
 
         public static Error UserNotFound => Error.NotFound(
                 "User.UserNotFound",
-                "User with this userId not found in this room");
+                "User not found");
     }
 
     public class Message 
@@ -24,6 +24,14 @@ public partial class Errors
         public static Error MessageNotFound => Error.NotFound(
             "Message.NotFound",
             "Message not found");
+
+        public static Error ImageFileIsCorrupted => Error.Conflict(
+            "Message.ImageFileIsCorrupted",
+            "Image file is corrupted");
+
+        public static Error CantUploadImage => Error.Failure(
+            "Message.CantUploadImage",
+            "Cant upload image because of server error");
     }
 
     public class Room

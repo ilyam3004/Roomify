@@ -104,7 +104,7 @@ public class UserRepository : IUserRepository
 
         using var connection = _dbContext.CreateConnection();
         int count = await connection.QueryFirstOrDefaultAsync<int>(query,
-            new {UserId = userId});
+            new { UserId = userId });
 
         return count != 0;
     }

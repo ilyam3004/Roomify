@@ -7,4 +7,6 @@ public record MessageResponse(
     string RoomId,
     string Text,
     DateTime Date,
-    bool FromUser);
+    bool FromUser,
+    bool IsImage,
+    string Url);

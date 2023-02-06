@@ -42,6 +42,7 @@ public class ChatHub : Hub
         await result.Match(
            async onValue => await SendMessageToRoom(new SendMessageRequest(
                                    onValue.UserId,
+                                   onValue.Username,
                                    onValue.RoomId,
                                    message,
                                    DateTime.UtcNow,
@@ -58,6 +59,16 @@ public class ChatHub : Hub
             .SendAsync("ReceiveRoomMessages", result);
     }
 
+    public override async Task OnDisconnectedAsync(Exception? exception)
+    {
+        ErrorOr<UserResponse> result = await _userService
+            .RemoveUserFromRoom(Context.ConnectionId);
+
+        await result.Match(
+            async onValue => await SendDataToRoomAboutUserLeaving(onValue),
+            async onError => await SendRemovingErrorToClientIfErrorNotFound(onError[0]));
+    }
+
     private async Task SendUserList(string roomId)
     {
         List<UserResponse> result = await _userService.GetUserList(roomId);
@@ -71,6 +82,7 @@ public class ChatHub : Hub
         ErrorOr<MessageResponse> result = await _messageService.SaveMessage(
             new SaveMessageRequest(
                 request.UserId,
+                request.Username,
                 request.RoomId,
                 request.Text,
                 request.Date,
@@ -83,16 +95,30 @@ public class ChatHub : Hub
                  .SendAsync("ReceiveError", GenerateProblem(onError)));
     }
 
-    public override async Task OnDisconnectedAsync(Exception? exception)
+    public async Task GetUserDataAndSendImage(IFormFile image)
     {
         ErrorOr<UserResponse> result = await _userService
-            .RemoveUserFromRoom(Context.ConnectionId);
-
+            .GetUserByConnectionId(Context.ConnectionId);
+        
         await result.Match(
-            async onValue => await SendDataToRoomAboutUserLeaving(onValue),
-            async onError => await SendRemovingErrorToClientIfErrorNotFound(onError[0]));
+           async onValue => await SendImageToRoom(onValue, image),
+          async onError => await Clients.Client(Context.ConnectionId)
+                .SendAsync("ReceiveError", GenerateProblem(onError)));
+
     }
 
+    private async Task SendImageToRoom(UserResponse response, IFormFile image)
+    {
+        ErrorOr<MessageResponse> result = await _messageService.SaveImage(
+            new SaveImageRequest(
+                response.UserId,
+                response.Username,
+                response.RoomId,
+                image,
+                true));
+        
+    }
+    
     private async Task SendDataToRoomAboutAddingUser(UserResponse response)
     {
         await Groups.AddToGroupAsync(Context.ConnectionId, response.RoomId);
@@ -100,6 +126,7 @@ public class ChatHub : Hub
         await SendUserList(response.RoomId);
         await SendMessageToRoom(new SendMessageRequest(
             response.UserId,
+            response.Username,
             response.RoomId,
             $"User {response.Username} has joined the room",
             DateTime.UtcNow,
@@ -112,6 +139,7 @@ public class ChatHub : Hub
         await SendUserList(response.RoomId);
         await SendMessageToRoom(new SendMessageRequest(
             response.UserId,
+            response.Username,
             response.RoomId,
             $"User {response.Username} has left the room",
             DateTime.UtcNow,
@@ -153,6 +181,7 @@ public class ChatHub : Hub
         {
             ErrorType.Conflict => StatusCodes.Status409Conflict,
             ErrorType.NotFound => StatusCodes.Status404NotFound,
+            _ => StatusCodes.Status500InternalServerError
         };
 
         var type = error.Type switch
