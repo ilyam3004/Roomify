@@ -1,14 +1,15 @@
-﻿using ChatApp.Application.Services;
+﻿using SignalR_UnitTestingSupportXUnit.Hubs;
+using ChatApp.Application.Models.Responses;
+using ChatApp.Application.Models.Requests;
+using ChatApp.Application.Services;
+using ChatApp.Domain.Common.Errors;
+using Microsoft.AspNetCore.SignalR;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using ChatApp.Contracts.Rooms;
 using ChatApp.Api.Hubs;
 using AutoFixture;
 using Moq;
-using ChatApp.Contracts.Rooms;
-using ChatApp.Application.Models.Requests;
-using SignalR_UnitTestingSupportXUnit.Hubs;
-using ChatApp.Application.Models.Responses;
-using ChatApp.Domain.Common.Errors;
-using NuGet.Frameworks;
-using Range = Moq.Range;
 
 namespace ChatApp.Api.Tests.Hubs;
 
@@ -49,7 +50,7 @@ public class ChatHubTests : HubUnitTestsBase
         //Assert
         ClientsMock.Verify(c =>
                 c.Client(It.IsAny<string>()),
-            Times.Between(2, 2, Range.Inclusive));
+            Times.Between(2, 2, Moq.Range.Inclusive));
 
         GroupsMock.Verify(g =>
             g.AddToGroupAsync(It.IsAny<string>(),
@@ -159,9 +160,9 @@ public class ChatHubTests : HubUnitTestsBase
 
         //Assert
         ClientsMock.Verify(c => 
-            c.Group(It.IsAny<string>()), Times.Between(1, 2, Range.Inclusive));
+            c.Group(It.IsAny<string>()), Times.Between(1, 2, Moq.Range.Inclusive));
     }
-    
+
     [Fact]
     public async Task OnDisconnectedAsync_ShouldSendDataAboutUserLeavingToRoom_WhenServiceReturnsNotFoundError()
     {
@@ -169,16 +170,45 @@ public class ChatHubTests : HubUnitTestsBase
         _userServiceMock
             .Setup(u => u.RemoveUserFromRoom(It.IsAny<string>()))
             .ReturnsAsync(Errors.User.UserNotFound);
-        
+
         _userServiceMock
             .Setup(u => u.RemoveUserFromRoom(It.IsAny<string>()))
             .ReturnsAsync(Errors.User.UserNotFound);
-        
+
         //Act
         await _sut.OnDisconnectedAsync(It.IsAny<Exception>());
 
         //Assert
         ClientsMock.Verify(c => c.Client(It.IsAny<string>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task SendImageToRoom_ShouldSendMessageResponseWithImageLink()
+    {
+        // Arrange
+
+
+        // Act
+
+
+        //Assert
+    }
+
+    [Fact]
+    public async Task SendImageToRoom_ShouldSendErrorWhenUserNotExists()
+    { 
+        // Arrange
+        _userServiceMock
+            .Setup(u => u.GetUserByConnectionId(It.IsAny<string>()))
+            .ReturnsAsync(Errors.User.UserNotFound);
+        
+        // Act
+
+        await _sut.GetUserDataAndSendImage(It.IsAny<IFormFile>());
+        
+        // Assert
+        ClientsMock
+            .Verify(c => c.Client(It.IsAny<string>()), Times.Once());
     }
 }
 

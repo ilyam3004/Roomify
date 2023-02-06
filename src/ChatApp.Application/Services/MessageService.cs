@@ -43,7 +43,7 @@ public class MessageService : IMessageService
                     FromUser = request.FromUser
                 });
                 
-                return MapMessageResponseResult(dbMessage, user);
+                return MapMessageResponseResult(dbMessage, user.Username, user.UserId);
             }
 
             return Errors.User.UserNotFound;
@@ -75,6 +75,35 @@ public class MessageService : IMessageService
         return Errors.Message.MessageIsNotRemoved;
     }
 
+    public async Task<ErrorOr<MessageResponse>> SaveImage(SaveImageRequest request)
+    {
+        if (request.Image.Length <= 0)
+        {
+            return Errors.Message.ImageFileIsCorrupted;
+        }
+
+        var uploadResult = await _messageRepository.UploadImageToCloudinary(request.Image);
+
+        if (uploadResult is null)
+        {
+            return Errors.Message.CantUploadImage;
+        }
+
+        var dbMessage = await _messageRepository.SaveMessage(new Message
+        {
+            MessageId = Guid.NewGuid().ToString(),
+            RoomId = request.RoomId,
+            UserId = request.UserId,
+            Text = "",
+            Date = DateTime.UtcNow,
+            FromUser = true,
+            IsImage = true,
+            ImageUrl = uploadResult.Url.ToString()
+        });
+
+        return MapMessageResponseResult(dbMessage, request.Username, request.UserId);
+    }
+
     public async Task<List<MessageResponse>> GetAllRoomMessages(string roomId)
     {
         List<Message> dbMessages = await _messageRepository.GetAllRoomMessages(roomId);   
@@ -96,21 +125,23 @@ public class MessageService : IMessageService
         foreach (var dbMessage in dbMessages)
         {
             var user = await _userRepository.GetUserById(dbMessage.UserId);
-            messages.Add(MapMessageResponseResult(dbMessage, user));
+            messages.Add(MapMessageResponseResult(dbMessage, user.Username, user.UserId));
         }
 
         return messages;
     }
 
-    private MessageResponse MapMessageResponseResult(Message message, User user)
+    private MessageResponse MapMessageResponseResult(Message message, string senderName, string senderId)
     {
         return new MessageResponse(
                 message.MessageId,
-                user.Username,
-                user.UserId,
+                senderName,
+                senderId,
                 message.RoomId,
                 message.Text,
                 message.Date,
-                message.FromUser);
+                message.FromUser,
+                message.IsImage,
+                message.ImageUrl);
     }
 }

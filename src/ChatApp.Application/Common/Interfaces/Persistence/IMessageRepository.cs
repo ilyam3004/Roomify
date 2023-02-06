@@ -1,4 +1,6 @@
-﻿using ChatApp.Domain.Entities;
+﻿using Microsoft.AspNetCore.Http;
+using CloudinaryDotNet.Actions;
+using ChatApp.Domain.Entities;
 
 namespace ChatApp.Application.Common.Interfaces.Persistence;
 
@@ -8,5 +10,6 @@ public interface IMessageRepository
     Task RemoveMessageById(string messageId);
     Task RemoveAllMessagesFromRoom(string roomId);
     Task<List<Message>> GetAllRoomMessages(string roomId);
+    Task<ImageUploadResult?> UploadImageToCloudinary(IFormFile image);
     Task<Message?> GetMessageByIdOrNullIfNotExists(string messageId);
 }

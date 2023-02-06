@@ -8,5 +8,7 @@ public class Message
     public string Text { get; set; }
     public DateTime Date { get; set; }
     public bool FromUser { get; set; }
+    public bool IsImage { get; set; }
+    public string ImageUrl { get; set; }
 }
 

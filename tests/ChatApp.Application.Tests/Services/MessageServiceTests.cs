@@ -78,12 +78,13 @@ public class MessageServiceTests
     {
         //Arrange
         var request = new SaveMessageRequest(
-            "", 
             "",
             "",
-            DateTime.UtcNow, 
+            "",
+            "",
+            DateTime.UtcNow,
             true);
-        
+
         //Act
         var messageResponse = await _sut.SaveMessage(request);
 
@@ -224,4 +225,38 @@ public class MessageServiceTests
         //Assert 
         Assert.Equal(Errors.User.UserNotFound, response.FirstError);
     }
+
+    // [Fact]
+    // public async Task SaveImage_ShouldReturnMessageResponse() 
+    // {
+    //     
+    //     // public record MessageResponse(
+    //     //     string MessageId,
+    //     //     string Username,
+    //     //     string UserId,
+    //     //     string RoomId,
+    //     //     string Text,
+    //     //     DateTime Date,
+    //     //     bool FromUser,
+    //     //     bool IsImage,
+    //     //     string Url);
+    //
+    //     // Arrange
+    //     var messageResponse = new MessageResponse(
+    //         Guid.NewGuid().ToString(),
+    //         "Username",
+    //         Guid.NewGuid().ToString(),
+    //         Guid.NewGuid().ToString(),
+    //         "",
+    //         DateTime.UtcNow,
+    //         true,
+    //         true,
+    //         "imageUrl");        
+    //
+    //     // Act
+    //     _sut.SaveImage();
+    //
+    //     // Assert
+    //     Assert.Equal();
+    // }
 }
