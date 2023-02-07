@@ -116,7 +116,6 @@ public class ChatHub : Hub
                 response.RoomId,
                 image,
                 true));
-        
     }
     
     private async Task SendDataToRoomAboutAddingUser(UserResponse response)
