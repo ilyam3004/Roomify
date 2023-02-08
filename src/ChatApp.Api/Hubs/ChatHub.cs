@@ -29,34 +29,9 @@ public class ChatHub : Hub
                 request.RoomName));
 
         await result.Match(
-             async onValue => await SendDataToRoomAboutAddingUser(onValue),
+            async onValue => await SendDataToRoomAboutAddingUser(onValue),
             async onError => await Clients.Client(Context.ConnectionId)
                 .SendAsync("ReceiveError", GenerateProblem(result.Errors)));
-    }
-
-    public async Task SendUserMessage(string message)
-    {
-        ErrorOr<UserResponse> result = await _userService
-            .GetUserByConnectionId(Context.ConnectionId);
-
-        await result.Match(
-           async onValue => await SendMessageToRoom(new SendMessageRequest(
-                                   onValue.UserId,
-                                   onValue.Username,
-                                   onValue.RoomId,
-                                   message,
-                                   DateTime.UtcNow,
-                                   true)),
-          async onError => await Clients.Client(Context.ConnectionId)
-                .SendAsync("ReceiveError", GenerateProblem(onError)));
-    }
-
-    public async Task SendAllRoomMessages(string roomId)
-    {
-        List<MessageResponse> result = await _messageService.GetAllRoomMessages(roomId);
-        
-        await Clients.Client(Context.ConnectionId)
-            .SendAsync("ReceiveRoomMessages", result);
     }
 
     public override async Task OnDisconnectedAsync(Exception? exception)
@@ -66,56 +41,7 @@ public class ChatHub : Hub
 
         await result.Match(
             async onValue => await SendDataToRoomAboutUserLeaving(onValue),
-            async onError => await SendRemovingErrorToClientIfErrorNotFound(onError[0]));
-    }
-
-    private async Task SendUserList(string roomId)
-    {
-        List<UserResponse> result = await _userService.GetUserList(roomId);
-
-        await Clients.Group(roomId)
-                 .SendAsync("ReceiveUserList", result);
-    }
-
-    private async Task SendMessageToRoom(SendMessageRequest request)
-    {
-        ErrorOr<MessageResponse> result = await _messageService.SaveMessage(
-            new SaveMessageRequest(
-                request.UserId,
-                request.Username,
-                request.RoomId,
-                request.Text,
-                request.Date,
-                request.FromUser));
-
-        await result.Match(
-            async onValue => await Clients.Group(onValue.RoomId)
-                 .SendAsync("ReceiveMessage", onValue),
-            async onError => await Clients.Client(Context.ConnectionId)
-                 .SendAsync("ReceiveError", GenerateProblem(onError)));
-    }
-
-    public async Task GetUserDataAndSendImage(IFormFile image)
-    {
-        ErrorOr<UserResponse> result = await _userService
-            .GetUserByConnectionId(Context.ConnectionId);
-        
-        await result.Match(
-           async onValue => await SendImageToRoom(onValue, image),
-          async onError => await Clients.Client(Context.ConnectionId)
-                .SendAsync("ReceiveError", GenerateProblem(onError)));
-
-    }
-
-    private async Task SendImageToRoom(UserResponse response, IFormFile image)
-    {
-        ErrorOr<MessageResponse> result = await _messageService.SaveImage(
-            new SaveImageRequest(
-                response.UserId,
-                response.Username,
-                response.RoomId,
-                image,
-                true));
+            async onError => await SendRemovingErrorToClientIfErrorTypeIsNotFound(onError[0]));
     }
     
     private async Task SendDataToRoomAboutAddingUser(UserResponse response)
@@ -134,7 +60,7 @@ public class ChatHub : Hub
     }
 
     private async Task SendDataToRoomAboutUserLeaving(UserResponse response)
-    { 
+    {
         await SendUserList(response.RoomId);
         await SendMessageToRoom(new SendMessageRequest(
             response.UserId,
@@ -144,35 +70,102 @@ public class ChatHub : Hub
             DateTime.UtcNow,
             false));
     }
-
-    private async Task SendRemovingErrorToClientIfErrorNotFound(Error error) 
+    
+    public async Task SendUserMessage(string message)
     {
-        if (error.Type != ErrorType.Unexpected) 
+        ErrorOr<UserResponse> result = await _userService
+            .GetUserByConnectionId(Context.ConnectionId);
+
+        await result.Match(
+            async onValue => await SendMessageToRoom(new SendMessageRequest(
+                onValue.UserId,
+                onValue.Username,
+                onValue.RoomId,
+                message,
+                DateTime.UtcNow,
+                true)),
+            async onError => await Clients.Client(Context.ConnectionId)
+                .SendAsync("ReceiveError", GenerateProblem(onError)));
+    }
+
+    public async Task SendAllRoomMessages(string roomId)
+    {
+        List<MessageResponse> result = await _messageService.GetAllRoomMessages(roomId);
+
+        await Clients.Client(Context.ConnectionId)
+            .SendAsync("ReceiveRoomMessages", result);
+    }
+
+    public async Task SendImageToRoom(SendImageRequest request)
+    {
+        ErrorOr<MessageResponse> result = await _messageService.SaveImage(
+            new SaveImageRequest(
+                request.UserId, 
+                request.Username,
+                request.RoomId,
+                request.ImageUrl));
+        
+        result.Match(
+            async onValue => await Clients.Group(onValue.RoomId)
+                .SendAsync("ReceiveMessage", onValue),
+            async onError => await Clients.Client(Context.ConnectionId)
+                .SendAsync("ReceiveError", GenerateProblem(onError)));
+    }
+
+    private async Task SendMessageToRoom(SendMessageRequest request)
+    {
+        ErrorOr<MessageResponse> result = await _messageService.SaveMessage(
+            new SaveMessageRequest(
+                request.UserId,
+                request.Username,
+                request.RoomId,
+                request.Text,
+                request.FromUser));
+
+        await result.Match(
+            async onValue => await Clients.Group(onValue.RoomId)
+                .SendAsync("ReceiveMessage", onValue),
+            async onError => await Clients.Client(Context.ConnectionId)
+                .SendAsync("ReceiveError", GenerateProblem(onError)));
+    }
+
+    private async Task SendRemovingErrorToClientIfErrorTypeIsNotFound(Error error)
+    {
+        if (error.Type != ErrorType.Unexpected)
         {
             await Clients.Client(Context.ConnectionId)
-                        .SendAsync("ReceiveError", error);
+                .SendAsync("ReceiveError", error);
         }
     }
-     private async Task SendUserData(UserResponse response)
-     {
-         await Clients.Client(Context.ConnectionId)
-             .SendAsync("ReceiveUserData", response);
-     }
 
-     private ProblemDetails GenerateProblem(List<Error> errors)
-     {
-         if (errors.All(error => error.Type == ErrorType.Validation))
-         {
-             return GetValidationProblem(errors);
-         }
+    private async Task SendUserList(string roomId)
+    {
+        List<UserResponse> result = await _userService.GetUserList(roomId);
 
-         if (errors.Count is 0)
-         {
-             return new ProblemDetails();
-         }
+        await Clients.Group(roomId)
+            .SendAsync("ReceiveUserList", result);
+    }
 
-         return GenerateProblem(errors[0]);
-     }
+    private async Task SendUserData(UserResponse response)
+    {
+        await Clients.Client(Context.ConnectionId)
+            .SendAsync("ReceiveUserData", response);
+    }
+
+    private ProblemDetails GenerateProblem(List<Error> errors)
+    {
+        if (errors.All(error => error.Type == ErrorType.Validation))
+        {
+            return GetValidationProblem(errors);
+        }
+
+        if (errors.Count is 0)
+        {
+            return new ProblemDetails();
+        }
+
+        return GenerateProblem(errors[0]);
+    }
 
     private ProblemDetails GenerateProblem(Error error)
     {
@@ -198,22 +191,22 @@ public class ChatHub : Hub
         };
     }
 
-     private ValidationProblemDetails GetValidationProblem(List<Error> errors)
-     {
-         var modelStateDictionary = new ModelStateDictionary();
+    private ValidationProblemDetails GetValidationProblem(List<Error> errors)
+    {
+        var modelStateDictionary = new ModelStateDictionary();
 
-         foreach (var error in errors)
-         {
-             modelStateDictionary.AddModelError(
-                 error.Code,
-                 error.Description);
-         }
+        foreach (var error in errors)
+        {
+            modelStateDictionary.AddModelError(
+                error.Code,
+                error.Description);
+        }
 
-         return new ValidationProblemDetails(modelStateDictionary)
-         {
-             Status = StatusCodes.Status400BadRequest,
-             Type = "https://www.rfc-editor.org/rfc/rfc7231#section-6.5.1",
-             Title = "One or more validation errors occured"
-         };
-     }
+        return new ValidationProblemDetails(modelStateDictionary)
+        {
+            Status = StatusCodes.Status400BadRequest,
+            Type = "https://www.rfc-editor.org/rfc/rfc7231#section-6.5.1",
+            Title = "One or more validation errors occured"
+        };
+    }
 }
