@@ -53,7 +53,6 @@ public class MessageServiceTests
 
         //Assert
         Assert.Equal(messageResponse.Value.Username, user.Username);
-        Assert.Equal(messageResponse.Value.Date, request.Date);
     }
     
     [Fact]
@@ -82,7 +81,6 @@ public class MessageServiceTests
             "",
             "",
             "",
-            DateTime.UtcNow,
             true);
 
         //Act
@@ -251,7 +249,7 @@ public class MessageServiceTests
     //         DateTime.UtcNow,
     //         true,
     //         true,
-    //         "imageUrl");        
+    //         "ImageUrl");        
     //
     //     // Act
     //     _sut.SaveImage();

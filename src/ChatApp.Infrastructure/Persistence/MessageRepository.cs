@@ -34,8 +34,7 @@ public class MessageRepository : IMessageRepository
             File = new FileDescription(image.FileName, stream)
         };
         var uploadResult = _cloudinary.Upload(uploadParams);
-        var upload = new ImageUploadResult();
-        
+
         if (uploadResult.Error is not null)
         {
             return null;

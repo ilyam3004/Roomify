@@ -1,5 +1,5 @@
-using ChatApp.Application.Models.Requests;
 using ChatApp.Application.Models.Responses;
+using ChatApp.Application.Models.Requests;
 using ErrorOr;
 
 namespace ChatApp.Application.Services;

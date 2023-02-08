@@ -5,5 +5,4 @@ public record SaveMessageRequest(
     string Username,
     string RoomId,
     string Text,
-    DateTime Date,
     bool FromUser);
