@@ -24,7 +24,7 @@ public class ImageController : ApiController
 
         return result.Match(
             onValue => Ok(MapUploadResponse(onValue)), 
-            Problem);
+            onError => Problem(onError));
     }
 
     private static UploadResultResponse MapUploadResponse(ImageUploadResult result)
