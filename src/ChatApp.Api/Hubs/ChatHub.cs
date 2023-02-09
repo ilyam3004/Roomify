@@ -105,7 +105,7 @@ public class ChatHub : Hub
                 request.RoomId,
                 request.ImageUrl));
         
-        result.Match(
+        await result.Match(
             async onValue => await Clients.Group(onValue.RoomId)
                 .SendAsync("ReceiveMessage", onValue),
             async onError => await Clients.Client(Context.ConnectionId)
