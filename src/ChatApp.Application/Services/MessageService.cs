@@ -21,11 +21,13 @@ public class MessageService : IMessageService
 
     public MessageService(IMessageRepository messageRepository, 
         IUserRepository userRepository,
-        IValidator<SaveMessageRequest> textMessageValidator)
+        IValidator<SaveMessageRequest> textMessageValidator,
+        IValidator<SaveImageRequest> imageMessageValidator)
     {
         _messageRepository = messageRepository;
         _textMessageValidator = textMessageValidator;
         _userRepository = userRepository;
+        _imageMessageValidator = imageMessageValidator;
     }
 
     public async Task<ErrorOr<MessageResponse>> SaveMessage(SaveMessageRequest request)

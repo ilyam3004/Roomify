@@ -3,7 +3,6 @@ using Microsoft.Extensions.DependencyInjection;
 using ChatApp.Application.Services;
 using FluentValidation;
 
-
 namespace ChatApp.Application;
 
 public static class DependencyInjection
