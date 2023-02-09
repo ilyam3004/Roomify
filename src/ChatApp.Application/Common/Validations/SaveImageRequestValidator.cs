@@ -3,22 +3,22 @@ using FluentValidation;
 
 namespace ChatApp.Application.Common.Validations;
 
-public class SaveMessageRequestValidator : AbstractValidator<SaveMessageRequest>
+public class SaveImageRequestValidator : AbstractValidator<SaveImageRequest>
 {
-    public SaveMessageRequestValidator()
+    public SaveImageRequestValidator()
     {
-        RuleFor(m => m.Text)
-            .NotNull()
-            .Length(1, 150);
-        
         RuleFor(m => m.UserId)
             .NotNull()
             .NotEmpty();
 
-        RuleFor(m => m.FromUser)
-            .NotNull();
+        RuleFor(m => m.Username)
+            .NotNull()
+            .NotEmpty();
 
         RuleFor(m => m.RoomId)
+            .NotNull();
+
+        RuleFor(m => m.ImageUrl)
             .NotNull()
             .NotEmpty();
     }

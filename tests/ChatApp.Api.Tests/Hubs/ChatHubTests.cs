@@ -3,9 +3,6 @@ using ChatApp.Application.Models.Responses;
 using ChatApp.Application.Models.Requests;
 using ChatApp.Application.Services;
 using ChatApp.Domain.Common.Errors;
-using Microsoft.AspNetCore.SignalR;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
 using ChatApp.Contracts.Rooms;
 using ChatApp.Api.Hubs;
 using AutoFixture;
@@ -183,18 +180,6 @@ public class ChatHubTests : HubUnitTestsBase
     }
 
     [Fact]
-    public async Task SendImageToRoom_ShouldSendMessageResponseWithImageLink()
-    {
-        // Arrange
-
-
-        // Act
-
-
-        //Assert
-    }
-
-    [Fact]
     public async Task SendImageToRoom_ShouldSendErrorWhenUserNotExists()
     { 
         // Arrange
@@ -204,7 +189,7 @@ public class ChatHubTests : HubUnitTestsBase
         
         // Act
 
-        await _sut.GetUserDataAndSendImage(It.IsAny<IFormFile>());
+        await _sut.SendImageToRoom(It.IsAny<SendImageRequest>());
         
         // Assert
         ClientsMock

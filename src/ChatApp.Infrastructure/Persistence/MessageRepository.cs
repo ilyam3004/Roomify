@@ -34,8 +34,7 @@ public class MessageRepository : IMessageRepository
             File = new FileDescription(image.FileName, stream)
         };
         var uploadResult = _cloudinary.Upload(uploadParams);
-        var upload = new ImageUploadResult();
-        
+
         if (uploadResult.Error is not null)
         {
             return null;
@@ -50,8 +49,8 @@ public class MessageRepository : IMessageRepository
 
     public async Task<Message> SaveMessage(Message message)
     {
-        string query = "INSERT INTO Message (MessageId, UserId, RoomId, Text, Date, FromUser, isImage, Url) " +
-                       "VALUES (@MessageId, @UserId, @RoomId, @Text, @Date, @FromUser, @isImage, @Url)";
+        string query = "INSERT INTO Message (MessageId, UserId, RoomId, Text, Date, FromUser, isImage, ImageUrl) " +
+                       "VALUES (@MessageId, @UserId, @RoomId, @Text, @Date, @FromUser, @isImage, @ImageUrl)";
 
         using var connection = _dbContext.CreateConnection();
         await connection.ExecuteAsync(query, message);

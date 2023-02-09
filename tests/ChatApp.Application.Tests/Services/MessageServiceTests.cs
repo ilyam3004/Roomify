@@ -18,12 +18,14 @@ public class MessageServiceTests
     private readonly Mock<IMessageRepository> _messageRepositoryMock = new();
     private readonly Mock<IUserRepository> _userRepositoryMock = new();
     private readonly IValidator<SaveMessageRequest> _messageValidator = new SaveMessageRequestValidator();
+    private readonly IValidator<SaveImageRequest> _imageValidator = new SaveImageRequestValidator();
 
     public MessageServiceTests()
     {
         _sut = new MessageService(_messageRepositoryMock.Object, 
             _userRepositoryMock.Object, 
-            _messageValidator);
+            _messageValidator,
+            _imageValidator);
         _fixture = new Fixture();
     }
 
@@ -53,7 +55,6 @@ public class MessageServiceTests
 
         //Assert
         Assert.Equal(messageResponse.Value.Username, user.Username);
-        Assert.Equal(messageResponse.Value.Date, request.Date);
     }
     
     [Fact]
@@ -82,7 +83,6 @@ public class MessageServiceTests
             "",
             "",
             "",
-            DateTime.UtcNow,
             true);
 
         //Act
@@ -251,7 +251,7 @@ public class MessageServiceTests
     //         DateTime.UtcNow,
     //         true,
     //         true,
-    //         "imageUrl");        
+    //         "ImageUrl");        
     //
     //     // Act
     //     _sut.SaveImage();

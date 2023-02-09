@@ -1,11 +1,14 @@
-using ErrorOr;
-using FluentValidation;
-using ChatApp.Domain.Entities;
-using FluentValidation.Results;
-using ChatApp.Domain.Common.Errors;
-using ChatApp.Application.Models.Requests;
-using ChatApp.Application.Models.Responses;
 using ChatApp.Application.Common.Interfaces.Persistence;
+using ChatApp.Application.Models.Responses;
+using ChatApp.Application.Models.Requests;
+using ChatApp.Domain.Common.Errors;
+using FluentValidation.Results;
+using CloudinaryDotNet.Actions;
+using Microsoft.AspNetCore.Http;
+using ChatApp.Domain.Entities;
+using Error = ErrorOr.Error;
+using FluentValidation;
+using ErrorOr;
 
 namespace ChatApp.Application.Services;
 
@@ -13,43 +16,47 @@ public class MessageService : IMessageService
 {
     private readonly IMessageRepository _messageRepository;
     private readonly IUserRepository _userRepository;
-    private readonly IValidator<SaveMessageRequest> _messageValidator;
+    private readonly IValidator<SaveMessageRequest> _textMessageValidator;
+    private readonly IValidator<SaveImageRequest> _imageMessageValidator;
 
     public MessageService(IMessageRepository messageRepository, 
         IUserRepository userRepository,
-        IValidator<SaveMessageRequest> messageValidator)
+        IValidator<SaveMessageRequest> textMessageValidator,
+        IValidator<SaveImageRequest> imageMessageValidator)
     {
         _messageRepository = messageRepository;
-        _messageValidator = messageValidator;
+        _textMessageValidator = textMessageValidator;
         _userRepository = userRepository;
+        _imageMessageValidator = imageMessageValidator;
     }
 
     public async Task<ErrorOr<MessageResponse>> SaveMessage(SaveMessageRequest request)
     {
-        var validateResult = await _messageValidator.ValidateAsync(request);
-        
-        if (validateResult.IsValid)
+        if (!await _userRepository.UserExists(request.UserId))
         {
-            if (await _userRepository.UserExists(request.UserId))
-            {
-                var user = await _userRepository.GetUserById(request.UserId);
-                var dbMessage = await _messageRepository.SaveMessage(new Message
-                {
-                    MessageId = Guid.NewGuid().ToString(),
-                    UserId = request.UserId,
-                    RoomId = request.RoomId,
-                    Text = request.Text,
-                    Date = request.Date,
-                    FromUser = request.FromUser
-                });
-                
-                return MapMessageResponseResult(dbMessage, user.Username, user.UserId);
-            }
-
             return Errors.User.UserNotFound;
         }
         
-        return ConvertValidationErrorToError(validateResult.Errors);
+        var validateResult = await _textMessageValidator.ValidateAsync(request);
+
+        if (!validateResult.IsValid)
+        {
+            return ConvertValidationErrorToError(validateResult.Errors);
+        }
+        
+        var user = await _userRepository.GetUserById(request.UserId);
+        var dbMessage = await _messageRepository.SaveMessage(new Message
+        {
+            MessageId = Guid.NewGuid().ToString(),
+            UserId = request.UserId,
+            RoomId = request.RoomId,
+            Text = request.Text,
+            Date = DateTime.UtcNow,
+            FromUser = request.FromUser
+        });
+                
+        return MapMessageResponseResult(dbMessage, user.Username, user.UserId);
+
     }
     
     public async Task<ErrorOr<Deleted>> RemoveMessage(RemoveMessageRequest request)
@@ -77,16 +84,16 @@ public class MessageService : IMessageService
 
     public async Task<ErrorOr<MessageResponse>> SaveImage(SaveImageRequest request)
     {
-        if (request.Image.Length <= 0)
+        if (!await _userRepository.UserExists(request.UserId))
         {
-            return Errors.Message.ImageFileIsCorrupted;
+            return Errors.User.UserNotFound;
         }
+        
+        var validateResult = await _imageMessageValidator.ValidateAsync(request);
 
-        var uploadResult = await _messageRepository.UploadImageToCloudinary(request.Image);
-
-        if (uploadResult is null)
+        if (!validateResult.IsValid)
         {
-            return Errors.Message.CantUploadImage;
+            return ConvertValidationErrorToError(validateResult.Errors);
         }
 
         var dbMessage = await _messageRepository.SaveMessage(new Message
@@ -98,10 +105,23 @@ public class MessageService : IMessageService
             Date = DateTime.UtcNow,
             FromUser = true,
             IsImage = true,
-            ImageUrl = uploadResult.Url.ToString()
+            ImageUrl = request.ImageUrl
         });
-
+            
         return MapMessageResponseResult(dbMessage, request.Username, request.UserId);
+
+    }
+
+    public async Task<ErrorOr<ImageUploadResult>> UploadImage(IFormFile image)
+    {
+        if (image.Length <= 0)
+        {
+            return Errors.Message.ImageFileIsCorrupted;
+        }
+
+        var uploadResult = await _messageRepository.UploadImageToCloudinary(image);
+
+        return uploadResult is null ? Errors.Message.CantUploadImage : uploadResult;
     }
 
     public async Task<List<MessageResponse>> GetAllRoomMessages(string roomId)
@@ -109,14 +129,6 @@ public class MessageService : IMessageService
         List<Message> dbMessages = await _messageRepository.GetAllRoomMessages(roomId);   
         
         return await MapRoomMessagesResponseResult(dbMessages);
-    }
-
-    private List<Error> ConvertValidationErrorToError(List<ValidationFailure> failures)
-    {
-        return failures.ConvertAll(
-            validationFaliure => Error.Validation(
-                validationFaliure.PropertyName,
-                validationFaliure.ErrorMessage));
     }
 
     private async Task<List<MessageResponse>> MapRoomMessagesResponseResult(List<Message> dbMessages)
@@ -143,5 +155,13 @@ public class MessageService : IMessageService
                 message.FromUser,
                 message.IsImage,
                 message.ImageUrl);
+    }
+    
+    private List<Error> ConvertValidationErrorToError(List<ValidationFailure> failures)
+    {
+        return failures.ConvertAll(
+            validationFaliure => Error.Validation(
+                validationFaliure.PropertyName,
+                validationFaliure.ErrorMessage));
     }
 }
