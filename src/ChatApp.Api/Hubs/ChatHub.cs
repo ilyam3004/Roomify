@@ -43,7 +43,7 @@ public class ChatHub : Hub
             async onValue => await SendDataToRoomAboutUserLeaving(onValue),
             async onError => await SendRemovingErrorToClientIfErrorTypeIsNotFound(onError[0]));
     }
-    
+
     private async Task SendDataToRoomAboutAddingUser(UserResponse response)
     {
         await Groups.AddToGroupAsync(Context.ConnectionId, response.RoomId);
@@ -100,16 +100,18 @@ public class ChatHub : Hub
     {
         ErrorOr<MessageResponse> result = await _messageService.SaveImage(
             new SaveImageRequest(
-                request.UserId, 
-                request.Username,
+                request.UserId,
                 request.RoomId,
                 request.ImageUrl));
+
+        await Clients.Group(result.Value.RoomId)
+            .SendAsync("ReceiveMessage", result.Value);
         
-        await result.Match(
-            async onValue => await Clients.Group(onValue.RoomId)
-                .SendAsync("ReceiveMessage", onValue),
-            async onError => await Clients.Client(Context.ConnectionId)
-                .SendAsync("ReceiveError", GenerateProblem(onError)));
+        // await result.Match(
+        //     async onValue => await Clients.Group(onValue.RoomId)
+        //         .SendAsync("ReceiveMessage", onValue),
+        //     async onError => await Clients.Client(Context.ConnectionId)
+        //         .SendAsync("ReceiveError", GenerateProblem(onError)));
     }
 
     private async Task SendMessageToRoom(SendMessageRequest request)

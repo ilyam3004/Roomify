@@ -44,7 +44,6 @@ public class MessageService : IMessageService
             return ConvertValidationErrorToError(validateResult.Errors);
         }
         
-        var user = await _userRepository.GetUserById(request.UserId);
         var dbMessage = await _messageRepository.SaveMessage(new Message
         {
             MessageId = Guid.NewGuid().ToString(),
@@ -52,10 +51,12 @@ public class MessageService : IMessageService
             RoomId = request.RoomId,
             Text = request.Text,
             Date = DateTime.UtcNow,
-            FromUser = request.FromUser
+            FromUser = request.FromUser,
+            IsImage = false,
+            ImageUrl = ""
         });
                 
-        return MapMessageResponseResult(dbMessage, user.Username, user.UserId);
+        return await MapMessageResponseResult(dbMessage);
 
     }
     
@@ -108,7 +109,7 @@ public class MessageService : IMessageService
             ImageUrl = request.ImageUrl
         });
             
-        return MapMessageResponseResult(dbMessage, request.Username, request.UserId);
+        return await MapMessageResponseResult(dbMessage);
 
     }
 
@@ -136,19 +137,20 @@ public class MessageService : IMessageService
         List<MessageResponse> messages = new();
         foreach (var dbMessage in dbMessages)
         {
-            var user = await _userRepository.GetUserById(dbMessage.UserId);
-            messages.Add(MapMessageResponseResult(dbMessage, user.Username, user.UserId));
+            messages.Add(await MapMessageResponseResult(dbMessage));
         }
 
         return messages;
     }
 
-    private MessageResponse MapMessageResponseResult(Message message, string senderName, string senderId)
+    private async Task<MessageResponse> MapMessageResponseResult(Message message)
     {
+        var user = await _userRepository.GetUserById(message.UserId);
+        
         return new MessageResponse(
                 message.MessageId,
-                senderName,
-                senderId,
+                user.Username,
+                message.UserId,
                 message.RoomId,
                 message.Text,
                 message.Date,

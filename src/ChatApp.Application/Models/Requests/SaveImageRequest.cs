@@ -2,6 +2,5 @@
 
 public record SaveImageRequest(
     string UserId,
-    string Username,
     string RoomId,
     string ImageUrl);

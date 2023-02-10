@@ -11,10 +11,6 @@ public class SaveImageRequestValidator : AbstractValidator<SaveImageRequest>
             .NotNull()
             .NotEmpty();
 
-        RuleFor(m => m.Username)
-            .NotNull()
-            .NotEmpty();
-
         RuleFor(m => m.RoomId)
             .NotNull();
 

@@ -9,4 +9,4 @@ public record MessageResponse(
     DateTime Date,
     bool FromUser,
     bool IsImage,
-    string Url);
+    string ImageUrl);
