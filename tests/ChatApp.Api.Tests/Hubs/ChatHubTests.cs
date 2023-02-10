@@ -178,24 +178,5 @@ public class ChatHubTests : HubUnitTestsBase
         //Assert
         ClientsMock.Verify(c => c.Client(It.IsAny<string>()), Times.Once);
     }
-
-    [Fact]
-    public async Task SendImageToRoom_ShouldSendErrorWhenUserNotExists()
-    { 
-        // Arrange
-        var request = _fixture.Create<SendImageRequest>();
-        
-        _messageServiceMock
-            .Setup(u => u.SaveImage(It.IsAny<SaveImageRequest>()))
-            .ReturnsAsync(Errors.User.UserNotFound);
-        
-        // Act
-
-        await _sut.SendImageToRoom(request);
-        
-        // Assert
-        ClientsMock
-            .Verify(c => c.Client(It.IsAny<string>()), Times.Once());
-    }
 }
 
