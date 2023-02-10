@@ -85,6 +85,10 @@ public class MessageServiceTests
             "",
             true);
 
+        _userRepositoryMock
+            .Setup(x => x.UserExists(request.UserId))
+            .ReturnsAsync(true);
+
         //Act
         var messageResponse = await _sut.SaveMessage(request);
 

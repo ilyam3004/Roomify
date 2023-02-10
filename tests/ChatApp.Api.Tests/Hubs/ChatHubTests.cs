@@ -183,13 +183,15 @@ public class ChatHubTests : HubUnitTestsBase
     public async Task SendImageToRoom_ShouldSendErrorWhenUserNotExists()
     { 
         // Arrange
-        _userServiceMock
-            .Setup(u => u.GetUserByConnectionId(It.IsAny<string>()))
+        var request = _fixture.Create<SendImageRequest>();
+        
+        _messageServiceMock
+            .Setup(u => u.SaveImage(It.IsAny<SaveImageRequest>()))
             .ReturnsAsync(Errors.User.UserNotFound);
         
         // Act
 
-        await _sut.SendImageToRoom(It.IsAny<SendImageRequest>());
+        await _sut.SendImageToRoom(request);
         
         // Assert
         ClientsMock
