@@ -7,6 +7,7 @@ using ChatApp.Domain.Entities;
 using Error = ErrorOr.Error;
 using FluentValidation;
 using AutoFixture;
+using MapsterMapper;
 using Moq;
 
 namespace ChatApp.Application.Tests.Services;
@@ -17,11 +18,12 @@ public class UserServiceTests
     private readonly Mock<IUserRepository> _userRepositoryMock = new();
     private readonly Fixture _fixture;
     private readonly IValidator<CreateUserRequest> _userValidator = new CreateUserRequestValidator();
-
+    private readonly IMapper _mapper = new Mapper();
+    
     public UserServiceTests()
     {
         _fixture = new Fixture();
-        _sut = new UserService(_userRepositoryMock.Object, _userValidator);
+        _sut = new UserService(_userRepositoryMock.Object, _userValidator, _mapper);
     }
 
     [Fact]

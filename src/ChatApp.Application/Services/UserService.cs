@@ -6,6 +6,7 @@ using FluentValidation.Results;
 using ChatApp.Domain.Entities;
 using FluentValidation;
 using ErrorOr;
+using MapsterMapper;
 
 namespace ChatApp.Application.Services;
 
@@ -13,9 +14,13 @@ public class UserService : IUserService
 {
     private readonly IValidator<CreateUserRequest> _userValidator;
     private readonly IUserRepository _userRepository;
+    private readonly IMapper _mapper;
 
-    public UserService(IUserRepository userRepository, IValidator<CreateUserRequest> userValidator)
+    public UserService(IUserRepository userRepository, 
+        IValidator<CreateUserRequest> userValidator,
+        IMapper mapper)
     {
+        _mapper = mapper;
         _userValidator = userValidator;
         _userRepository = userRepository;
     }
@@ -45,7 +50,7 @@ public class UserService : IUserService
             var dbUser = await _userRepository
                 .AddUser(userToAdd);
     
-            return MapUserResponse(dbUser, room);
+            return _mapper.Map<UserResponse>((dbUser, room));
         }
 
         return ConvertValidationErrorToError(validateResult.Errors);
@@ -69,7 +74,7 @@ public class UserService : IUserService
             return Errors.Room.RoomIsEmpty;
         }
 
-        return MapUserResponse(user, room);
+        return _mapper.Map<UserResponse>((user, room));
     }
 
     public async Task<List<UserResponse>> GetUserList(string roomId)
@@ -78,11 +83,7 @@ public class UserService : IUserService
 
         List<User> dbUsers = await _userRepository.GetRoomUsers(roomId);
 
-        return MapUserList(dbUsers, new Room
-        {
-            RoomId = room.RoomId,
-            RoomName = room.RoomName
-        });
+        return MapUserList(dbUsers, room);
     }
 
     public async Task<ErrorOr<UserResponse>> GetUserByConnectionId(string connectionId)
@@ -96,7 +97,7 @@ public class UserService : IUserService
 
         Room room = await _userRepository.GetRoomById(user.RoomId);
 
-        return MapUserResponse(user, room);
+        return _mapper.Map<UserResponse>((user, room));
     }
 
 
@@ -112,19 +113,8 @@ public class UserService : IUserService
     {
         List<UserResponse> userList = new();
 
-        dbUsers.ForEach(user => { userList.Add(MapUserResponse(user, room)); });
+        dbUsers.ForEach(user => { userList.Add(_mapper.Map<UserResponse>((user, room))); });
 
         return userList;
-    }
-
-
-    private UserResponse MapUserResponse(User user, Room room)
-    {
-        return new UserResponse(
-            user.UserId,
-            user.Username,
-            user.ConnectionId,
-            room.RoomId,
-            room.RoomName);
     }
 }
