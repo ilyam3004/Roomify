@@ -7,6 +7,7 @@ using ChatApp.Domain.Entities;
 using FluentValidation;
 using AutoFixture;
 using ErrorOr;
+using MapsterMapper;
 using Moq;
 
 namespace ChatApp.Application.Tests.Services;
@@ -19,13 +20,15 @@ public class MessageServiceTests
     private readonly Mock<IUserRepository> _userRepositoryMock = new();
     private readonly IValidator<SaveMessageRequest> _messageValidator = new SaveMessageRequestValidator();
     private readonly IValidator<SaveImageRequest> _imageValidator = new SaveImageRequestValidator();
+    private readonly IMapper _mapper = new Mapper();
 
     public MessageServiceTests()
     {
         _sut = new MessageService(_messageRepositoryMock.Object, 
             _userRepositoryMock.Object, 
             _messageValidator,
-            _imageValidator);
+            _imageValidator,
+            _mapper);
         _fixture = new Fixture();
     }
 
@@ -229,38 +232,4 @@ public class MessageServiceTests
         //Assert 
         Assert.Equal(Errors.User.UserNotFound, response.FirstError);
     }
-
-    // [Fact]
-    // public async Task SaveImage_ShouldReturnMessageResponse() 
-    // {
-    //     
-    //     // public record MessageResponse(
-    //     //     string MessageId,
-    //     //     string Username,
-    //     //     string UserId,
-    //     //     string RoomId,
-    //     //     string Text,
-    //     //     DateTime Date,
-    //     //     bool FromUser,
-    //     //     bool IsImage,
-    //     //     string Url);
-    //
-    //     // Arrange
-    //     var messageResponse = new MessageResponse(
-    //         Guid.NewGuid().ToString(),
-    //         "Username",
-    //         Guid.NewGuid().ToString(),
-    //         Guid.NewGuid().ToString(),
-    //         "",
-    //         DateTime.UtcNow,
-    //         true,
-    //         true,
-    //         "ImageUrl");        
-    //
-    //     // Act
-    //     _sut.SaveImage();
-    //
-    //     // Assert
-    //     Assert.Equal();
-    // }
 }

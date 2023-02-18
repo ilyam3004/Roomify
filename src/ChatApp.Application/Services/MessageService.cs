@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Http;
 using ChatApp.Domain.Entities;
 using Error = ErrorOr.Error;
 using FluentValidation;
+using MapsterMapper;
 using ErrorOr;
 
 namespace ChatApp.Application.Services;
@@ -18,16 +19,19 @@ public class MessageService : IMessageService
     private readonly IUserRepository _userRepository;
     private readonly IValidator<SaveMessageRequest> _textMessageValidator;
     private readonly IValidator<SaveImageRequest> _imageMessageValidator;
+    private readonly IMapper _mapper;
 
     public MessageService(IMessageRepository messageRepository, 
         IUserRepository userRepository,
         IValidator<SaveMessageRequest> textMessageValidator,
-        IValidator<SaveImageRequest> imageMessageValidator)
+        IValidator<SaveImageRequest> imageMessageValidator,
+        IMapper mapper)
     {
         _messageRepository = messageRepository;
         _textMessageValidator = textMessageValidator;
         _userRepository = userRepository;
         _imageMessageValidator = imageMessageValidator;
+        _mapper = mapper;
     }
 
     public async Task<ErrorOr<MessageResponse>> SaveMessage(SaveMessageRequest request)
@@ -55,9 +59,10 @@ public class MessageService : IMessageService
             IsImage = false,
             ImageUrl = ""
         });
-                
-        return await MapMessageResponseResult(dbMessage);
 
+        var user = await _userRepository.GetUserById(dbMessage.UserId);
+
+        return _mapper.Map<MessageResponse>((dbMessage, user));
     }
     
     public async Task<ErrorOr<Deleted>> RemoveMessage(RemoveMessageRequest request)
@@ -108,8 +113,10 @@ public class MessageService : IMessageService
             IsImage = true,
             ImageUrl = request.ImageUrl
         });
+
+        var user = await _userRepository.GetUserById(dbMessage.UserId);
             
-        return await MapMessageResponseResult(dbMessage);
+        return _mapper.Map<MessageResponse>((dbMessage, user));
 
     }
 
@@ -137,28 +144,13 @@ public class MessageService : IMessageService
         List<MessageResponse> messages = new();
         foreach (var dbMessage in dbMessages)
         {
-            messages.Add(await MapMessageResponseResult(dbMessage));
+            var user = await _userRepository.GetUserById(dbMessage.UserId);
+            messages.Add(_mapper.Map<MessageResponse>((dbMessage, user)));
         }
 
         return messages;
     }
 
-    private async Task<MessageResponse> MapMessageResponseResult(Message message)
-    {
-        var user = await _userRepository.GetUserById(message.UserId);
-        
-        return new MessageResponse(
-                message.MessageId,
-                user.Username,
-                message.UserId,
-                message.RoomId,
-                message.Text,
-                message.Date,
-                message.FromUser,
-                message.IsImage,
-                message.ImageUrl);
-    }
-    
     private List<Error> ConvertValidationErrorToError(List<ValidationFailure> failures)
     {
         return failures.ConvertAll(

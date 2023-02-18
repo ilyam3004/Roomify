@@ -5,8 +5,8 @@ using ChatApp.Domain.Common.Errors;
 using FluentValidation.Results;
 using ChatApp.Domain.Entities;
 using FluentValidation;
-using ErrorOr;
 using MapsterMapper;
+using ErrorOr;
 
 namespace ChatApp.Application.Services;
 
@@ -83,7 +83,7 @@ public class UserService : IUserService
 
         List<User> dbUsers = await _userRepository.GetRoomUsers(roomId);
 
-        return MapUserList(dbUsers, room);
+        return dbUsers.Select(user => _mapper.Map<UserResponse>((user, room))).ToList();
     }
 
     public async Task<ErrorOr<UserResponse>> GetUserByConnectionId(string connectionId)
@@ -107,14 +107,5 @@ public class UserService : IUserService
             validationFaliure => Error.Validation(
                 validationFaliure.PropertyName,
                 validationFaliure.ErrorMessage));
-    }
-
-    private List<UserResponse> MapUserList(List<User> dbUsers, Room room)
-    {
-        List<UserResponse> userList = new();
-
-        dbUsers.ForEach(user => { userList.Add(_mapper.Map<UserResponse>((user, room))); });
-
-        return userList;
     }
 }

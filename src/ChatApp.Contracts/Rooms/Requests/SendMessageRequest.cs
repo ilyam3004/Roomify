@@ -5,6 +5,5 @@ public record SendMessageRequest(
     string Username,
     string RoomId,
     string Text,
-    DateTime Date,
     bool FromUser);
 

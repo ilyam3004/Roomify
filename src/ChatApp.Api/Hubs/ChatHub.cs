@@ -54,7 +54,6 @@ public class ChatHub : Hub
             response.Username,
             response.RoomId,
             $"User {response.Username} has joined the room",
-            DateTime.UtcNow,
             false));
         await SendAllRoomMessages(response.RoomId);
     }
@@ -67,7 +66,6 @@ public class ChatHub : Hub
             response.Username,
             response.RoomId,
             $"User {response.Username} has left the room",
-            DateTime.UtcNow,
             false));
     }
     
@@ -82,7 +80,6 @@ public class ChatHub : Hub
                 onValue.Username,
                 onValue.RoomId,
                 message,
-                DateTime.UtcNow,
                 true)),
             async onError => await Clients.Client(Context.ConnectionId)
                 .SendAsync("ReceiveError", GenerateProblem(onError)));
