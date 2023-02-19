@@ -1,18 +1,14 @@
-using ChatApp.Api.Hubs;
-using ChatApp.Application;
 using ChatApp.Infrastructure;
+using ChatApp.Application;
+using ChatApp.Api.Hubs;
+using ChatApp.Api;
 
 var builder = WebApplication.CreateBuilder(args);
 {
     builder.Services
-    .AddInfrastructure(builder)
-    .AddApplication()
-    .AddSwaggerGen()
-    .AddControllers();
-
-    builder.Services
-        .AddCors()
-        .AddSignalR();
+        .AddPresentation()
+        .AddInfrastructure(builder)
+        .AddApplication();
 }
 
 var app = builder.Build();

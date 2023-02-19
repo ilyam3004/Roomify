@@ -3,18 +3,21 @@ using ChatApp.Application.Services;
 using Microsoft.AspNetCore.Mvc;
 using CloudinaryDotNet.Actions;
 using ErrorOr;
+using MapsterMapper;
 
-namespace ChatApp.Api.Hubs;
+namespace ChatApp.Api.Controllers;
 
 [ApiController]
 [Route("img")]
 public class ImageController : ApiController
 {
     private readonly IMessageService _messageService;
-
-    public ImageController(IMessageService messageService)
+    private readonly IMapper _mapper;
+    
+    public ImageController(IMessageService messageService, IMapper mapper)
     {
         _messageService = messageService;
+        _mapper = mapper;
     }
 
     [HttpPost("uploadImage")]
@@ -23,14 +26,7 @@ public class ImageController : ApiController
         ErrorOr<ImageUploadResult> result = await _messageService.UploadImage(image);
 
         return result.Match(
-            onValue => Ok(MapUploadResponse(onValue)), 
-            onError => Problem(onError));
-    }
-
-    private static UploadResultResponse MapUploadResponse(ImageUploadResult result)
-    {
-        return new UploadResultResponse(
-            result.PublicId,
-            result.Url.ToString());
+            onValue => Ok(_mapper.Map<UploadResultResponse>(onValue)), 
+            Problem);
     }
 }

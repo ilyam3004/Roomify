@@ -2,7 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using ErrorOr;
 
-namespace ChatApp.Api.Hubs;
+namespace ChatApp.Api.Controllers;
 
 [ApiController]
 public class ApiController : ControllerBase

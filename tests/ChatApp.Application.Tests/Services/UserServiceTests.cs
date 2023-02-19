@@ -7,6 +7,9 @@ using ChatApp.Domain.Entities;
 using Error = ErrorOr.Error;
 using FluentValidation;
 using AutoFixture;
+using ChatApp.Application.Models.Responses;
+using ChatApp.Application.Tests.Config;
+using MapsterMapper;
 using Moq;
 
 namespace ChatApp.Application.Tests.Services;
@@ -17,11 +20,12 @@ public class UserServiceTests
     private readonly Mock<IUserRepository> _userRepositoryMock = new();
     private readonly Fixture _fixture;
     private readonly IValidator<CreateUserRequest> _userValidator = new CreateUserRequestValidator();
+    private readonly IMapper _mapper = MapsterConfigForTesting.GetMapper();
 
     public UserServiceTests()
     {
         _fixture = new Fixture();
-        _sut = new UserService(_userRepositoryMock.Object, _userValidator);
+        _sut = new UserService(_userRepositoryMock.Object, _userValidator, _mapper);
     }
 
     [Fact]
@@ -42,13 +46,19 @@ public class UserServiceTests
             .Setup(x => x.GetRoomById(room.RoomId))
             .ReturnsAsync(room);
 
+        var expectedResponse = new UserResponse(
+            user.UserId,
+            user.Username,
+            user.ConnectionId,
+            room.RoomId,
+            room.RoomName);
+
         // Act
-        var userResponse = await _sut
+        var actualResponse = await _sut
             .GetUserByConnectionId(user.ConnectionId);
 
         // Assert
-        Assert.Equal(userResponse.Value.ConnectionId, user.ConnectionId);
-        Assert.Equal(userResponse.Value.RoomName, room.RoomName);
+        Assert.Equal(expectedResponse, actualResponse);
     }
 
     [Fact]
@@ -56,23 +66,17 @@ public class UserServiceTests
     {
         //Arrange
         var connectionId = Guid.NewGuid().ToString();
-        var room = _fixture.Create<Room>();
 
         _userRepositoryMock
             .Setup(x => x.GetUserByConnectionIdOrNull(connectionId))
             .ReturnsAsync(() => null);
 
-
-        _userRepositoryMock
-            .Setup(x => x.GetRoomById(room.RoomId))
-            .ReturnsAsync(room);
-
         //Act
-        var userResponse = await _sut
+        var actualResponse = await _sut
             .GetUserByConnectionId(connectionId);
 
         //Assert
-        Assert.Equal(userResponse.FirstError, Errors.User.UserNotFound);
+        Assert.Equal(Errors.User.UserNotFound, actualResponse.FirstError);
     }
 
     [Fact]
@@ -135,8 +139,8 @@ public class UserServiceTests
             .Create();
 
         var room = _fixture.Build<Room>()
-          .With(r => r.RoomName, request.RoomName)
-          .Create();
+            .With(r => r.RoomName, request.RoomName)
+            .Create();
 
         _userRepositoryMock
             .Setup(x => x.CreateRoomIfNotExists(request.RoomName))
@@ -182,7 +186,6 @@ public class UserServiceTests
     [Fact]
     public async Task RemoveUserFromRoom_ShouldReturnError_WhenUserNotExists()
     {
-        
         // Arrange
         var connectionId = Guid.NewGuid().ToString();
         var room = _fixture.Create<Room>();
@@ -201,7 +204,7 @@ public class UserServiceTests
         // Assert
         Assert.Equal(response.FirstError, Errors.User.UserNotFound);
     }
-    
+
     [Fact]
     public async Task RemoveUserFromRoom_ShouldReturnError_WhenRoomIsEmpty()
     {
@@ -236,7 +239,7 @@ public class UserServiceTests
     {
         // Arrange
         var room = _fixture.Create<Room>();
-        
+
         _userRepositoryMock
             .Setup(x => x.GetRoomById(room.RoomId))
             .ReturnsAsync(room);
@@ -249,10 +252,10 @@ public class UserServiceTests
         _userRepositoryMock
             .Setup(x => x.GetRoomUsers(room.RoomId))
             .ReturnsAsync(userList);
-        
+
         //Act
         var response = await _sut.GetUserList(room.RoomId);
-        
+
         //Assert
         Assert.Equal(response.Count, userList.Count);
         Assert.Equal(response[1].RoomId, userList[0].RoomId);
