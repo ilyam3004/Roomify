@@ -24,6 +24,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\src\ChatApp.Api\ChatApp.Api.csproj" />
     <ProjectReference Include="..\..\src\ChatApp.Application\ChatApp.Application.csproj" />
     <ProjectReference Include="..\..\src\ChatApp.Infrastructure\ChatApp.Infrastructure.csproj" />
   </ItemGroup>

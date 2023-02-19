@@ -100,15 +100,12 @@ public class ChatHub : Hub
                 request.UserId,
                 request.RoomId,
                 request.ImageUrl));
-
-        await Clients.Group(result.Value.RoomId)
-            .SendAsync("ReceiveMessage", result.Value);
         
-        // await result.Match(
-        //     async onValue => await Clients.Group(onValue.RoomId)
-        //         .SendAsync("ReceiveMessage", onValue),
-        //     async onError => await Clients.Client(Context.ConnectionId)
-        //         .SendAsync("ReceiveError", GenerateProblem(onError)));
+        await result.Match(
+            async onValue => await Clients.Group(onValue.RoomId)
+                .SendAsync("ReceiveMessage", onValue),
+            async onError => await Clients.Client(Context.ConnectionId)
+                .SendAsync("ReceiveError", GenerateProblem(onError)));
     }
 
     private async Task SendMessageToRoom(SendMessageRequest request)

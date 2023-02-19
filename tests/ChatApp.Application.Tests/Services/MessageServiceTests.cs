@@ -1,4 +1,5 @@
-﻿using ChatApp.Application.Common.Interfaces.Persistence;
+﻿using System.ComponentModel;
+using ChatApp.Application.Common.Interfaces.Persistence;
 using ChatApp.Application.Common.Validations;
 using ChatApp.Application.Models.Requests;
 using ChatApp.Application.Services;
@@ -6,21 +7,26 @@ using ChatApp.Domain.Common.Errors;
 using ChatApp.Domain.Entities;
 using FluentValidation;
 using AutoFixture;
+using ChatApp.Application.Tests.Config;
+using CloudinaryDotNet;
+using CloudinaryDotNet.Actions;
 using ErrorOr;
 using MapsterMapper;
+using Microsoft.AspNetCore.Http;
 using Moq;
+using Error = ErrorOr.Error;
 
 namespace ChatApp.Application.Tests.Services;
 
 public class MessageServiceTests
 {
-    private readonly MessageService _sut;
-    private readonly Fixture _fixture;
-    private readonly Mock<IMessageRepository> _messageRepositoryMock = new();
-    private readonly Mock<IUserRepository> _userRepositoryMock = new();
     private readonly IValidator<SaveMessageRequest> _messageValidator = new SaveMessageRequestValidator();
     private readonly IValidator<SaveImageRequest> _imageValidator = new SaveImageRequestValidator();
-    private readonly IMapper _mapper = new Mapper();
+    private readonly Mock<IMessageRepository> _messageRepositoryMock = new();
+    private readonly Mock<IUserRepository> _userRepositoryMock = new();
+    private readonly IMapper _mapper = MapsterConfigForTesting.GetMapper();
+    private readonly MessageService _sut;
+    private readonly Fixture _fixture;
 
     public MessageServiceTests()
     {
@@ -36,28 +42,38 @@ public class MessageServiceTests
     public async Task SaveMessage_ShouldReturnMessageResponse()
     {
         //Arrange
-        var request = _fixture.Create<SaveMessageRequest>();
+        var request = _fixture.Build<SaveMessageRequest>()
+            .With(r => r.Text, "message")
+            .Create();
+        
         var user = _fixture.Build<User>()
             .With(u => u.UserId, request.UserId)
+            .Create();
+
+        var message = _fixture.Build<Message>()
+            .With(m => m.Text, request.Text)
+            .With(m => m.RoomId, request.RoomId)
+            .With(m => m.UserId, request.UserId)
             .Create();
 
         _userRepositoryMock
             .Setup(x => x.UserExists(user.UserId))
             .ReturnsAsync(true);
 
+        _messageRepositoryMock
+            .Setup(x => x.SaveMessage(It.IsAny<Message>()))
+            .ReturnsAsync(message);
+        
         _userRepositoryMock
             .Setup(x => x.GetUserById(user.UserId))
             .ReturnsAsync(user);
-
-        _messageRepositoryMock
-            .Setup(x => x.SaveMessage(It.IsAny<Message>()))
-            .ReturnsAsync((Message message) => message);
         
         //Act
-        var messageResponse = await _sut.SaveMessage(request);
+        var actualResponse = await _sut.SaveMessage(request);
 
         //Assert
-        Assert.Equal(messageResponse.Value.Username, user.Username);
+        Assert.Equal(message.UserId, actualResponse.Value.UserId);
+        Assert.Equal(message.MessageId, actualResponse.Value.MessageId);
     }
     
     [Fact]
@@ -108,14 +124,6 @@ public class MessageServiceTests
         _userRepositoryMock
             .Setup(x => x.GetUserById(user.UserId))
             .ReturnsAsync(user);
-
-        _userRepositoryMock
-            .Setup(x => x.UserExists(user.UserId))
-            .ReturnsAsync(true);
-
-        _userRepositoryMock
-            .Setup(x => x.RoomExists(user.RoomId))
-            .ReturnsAsync(true);
 
         var messageList = _fixture.Build<Message>()
             .With(m => m.UserId, user.UserId)
@@ -231,5 +239,162 @@ public class MessageServiceTests
         
         //Assert 
         Assert.Equal(Errors.User.UserNotFound, response.FirstError);
+    }
+
+    [Fact]
+    public async Task SaveImage_ShouldReturnMessageResponse()
+    {
+        //Arrange
+        var request = _fixture.Create<SaveImageRequest>();
+
+        var user = _fixture.Build<User>()
+            .With(u => u.UserId, request.UserId)
+            .With(u => u.RoomId, request.RoomId)
+            .Create();
+
+        var message = _fixture.Build<Message>()
+            .With(m => m.UserId, request.UserId)
+            .With(m => m.RoomId, request.RoomId)
+            .With(m => m.IsImage, true)
+            .With(m => m.ImageUrl, request.ImageUrl)
+            .Create();
+
+        _userRepositoryMock
+            .Setup(x => x.UserExists(It.IsAny<string>()))
+            .ReturnsAsync(true);
+
+        _userRepositoryMock
+            .Setup(x => x.GetUserById(It.IsAny<string>()))
+            .ReturnsAsync(user);
+
+        _messageRepositoryMock
+            .Setup(x => x.SaveMessage(It.IsAny<Message>()))
+            .ReturnsAsync(message);
+        
+        //Act
+        var actualResponse = await _sut.SaveImage(request); 
+        
+        //Assert
+        Assert.Equal(message.ImageUrl, actualResponse.Value.ImageUrl);
+        Assert.Equal(message.UserId, actualResponse.Value.UserId);
+    }
+
+    [Fact]
+    public async Task SaveImage_ShouldReturnError_WhenUserNotExists()
+    {
+        //Arrange
+        var request = _fixture.Create<SaveImageRequest>();
+        
+        _userRepositoryMock
+            .Setup(x => x.UserExists(It.IsAny<string>()))
+            .ReturnsAsync(false);
+        
+        //Act
+        var actualResponse = await _sut.SaveImage(request);
+
+        //Assert
+        Assert.Equal(Errors.User.UserNotFound, actualResponse.FirstError);
+    }
+
+    [Fact]
+    public async Task SaveImage_ShouldReturnError_WhenRequestIsNotValid()
+    {
+        //Arrange
+        var request = _fixture.Build<SaveImageRequest>()
+            .With(r => r.ImageUrl, "")
+            .Create();
+
+        _userRepositoryMock
+            .Setup(x => x.UserExists(It.IsAny<string>()))
+            .ReturnsAsync(true);
+
+        //Act
+        var actualResponse = await _sut.SaveImage(request);
+
+        //Assert
+        Assert.Equal(ErrorType.Validation, actualResponse.FirstError.Type);
+    }
+
+    [Fact]
+    public async Task UploadImage_ShouldReturnUploadResult()
+    {
+        //Arrange
+        var content = "Hello World from a Fake File";
+        var fileName = "test.jpg";
+        var stream = new MemoryStream();
+        var writer = new StreamWriter(stream);
+        
+        await writer.WriteAsync(content);
+        await writer.FlushAsync();
+        
+        stream.Position = 0;
+        
+        IFormFile image = new FormFile(stream, 0, stream.Length, "id_from_form", fileName);
+        
+        var uploadResult = new ImageUploadResult
+        {
+            PublicId = Guid.NewGuid().ToString(),
+            Url = new Uri("https://test-image-url.com")
+        };
+
+        _messageRepositoryMock
+            .Setup(m => m.UploadImageToCloudinary(image))
+            .ReturnsAsync(uploadResult);
+
+        //Act
+        var actualResponse = await _sut.UploadImage(image);
+        
+        //Assert
+        Assert.Equal(uploadResult.Url, actualResponse.Value.Url);
+    }
+    
+    [Fact]
+    public async Task UploadImage_ShouldReturnError_WhenFileLengthLessThanOne()
+    {
+        //Arrange
+        var content = "Hello World from a Fake File";
+        var fileName = "test.jpg";
+        var stream = new MemoryStream();
+        var writer = new StreamWriter(stream);
+        
+        await writer.WriteAsync(content);
+        await writer.FlushAsync();
+        
+        stream.Position = 0;
+        
+        IFormFile image = new FormFile(stream, 0, 0, "id_from_form", fileName);
+
+        //Act
+        var actualResponse = await _sut.UploadImage(image);
+        
+        //Assert
+        Assert.Equal(Errors.Message.ImageFileIsCorrupted, actualResponse.FirstError);
+    }
+    
+    [Fact]
+    public async Task UploadImage_ShouldReturnError_WhenCloudinaryReturnsError()
+    {
+        //Arrange
+        var content = "Hello World from a Fake File";
+        var fileName = "test.jpg";
+        var stream = new MemoryStream();
+        var writer = new StreamWriter(stream);
+        
+        await writer.WriteAsync(content);
+        await writer.FlushAsync();
+        
+        stream.Position = 0;
+        
+        IFormFile image = new FormFile(stream, 0, stream.Length, "id_from_form", fileName);
+        
+        _messageRepositoryMock
+            .Setup(m => m.UploadImageToCloudinary(image))
+            .ReturnsAsync(() => null);
+        
+        //Act
+        var actualResponse = await _sut.UploadImage(image);
+        
+        //Assert
+        Assert.Equal(Errors.Message.CantUploadImage, actualResponse.FirstError);
     }
 }
