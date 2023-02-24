@@ -1,20 +1,19 @@
-﻿using System.ComponentModel;
-using ChatApp.Application.Common.Interfaces.Persistence;
+﻿using ChatApp.Application.Common.Interfaces.Persistence;
 using ChatApp.Application.Common.Validations;
 using ChatApp.Application.Models.Requests;
+using ChatApp.Application.Tests.Config;
 using ChatApp.Application.Services;
 using ChatApp.Domain.Common.Errors;
-using ChatApp.Domain.Entities;
-using FluentValidation;
-using AutoFixture;
-using ChatApp.Application.Tests.Config;
-using CloudinaryDotNet;
-using CloudinaryDotNet.Actions;
-using ErrorOr;
-using MapsterMapper;
 using Microsoft.AspNetCore.Http;
-using Moq;
+using CloudinaryDotNet.Actions;
+using ChatApp.Domain.Entities;
 using Error = ErrorOr.Error;
+using FluentValidation;
+using CloudinaryDotNet;
+using MapsterMapper;
+using AutoFixture;
+using ErrorOr;
+using Moq;
 
 namespace ChatApp.Application.Tests.Services;
 

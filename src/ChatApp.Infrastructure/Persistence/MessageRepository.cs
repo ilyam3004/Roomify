@@ -55,7 +55,7 @@ public class MessageRepository : IMessageRepository
         using var connection = _dbContext.CreateConnection();
         await connection.ExecuteAsync(query, message);
 
-        return await GetMessageByIdOrNullIfNotExists(message.MessageId);
+        return (await GetMessageByIdOrNullIfNotExists(message.MessageId))!;
     }
 
     public async Task RemoveMessageById(string messageId)
@@ -85,7 +85,7 @@ public class MessageRepository : IMessageRepository
         return messages.ToList();
     }
 
-    public async Task<Message> GetMessageByIdOrNullIfNotExists(string messageId)
+    public async Task<Message?> GetMessageByIdOrNullIfNotExists(string messageId)
     {
         string query = "SELECT * FROM Message WHERE MessageId = @MessageId";
 

@@ -44,6 +44,7 @@ public class UserService : IUserService
                 Username = request.Username,
                 ConnectionId = request.ConnectionId,
                 RoomId = room.RoomId,
+                Avatar = request.Avatar,
                 HasLeft = false
             };
 

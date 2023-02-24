@@ -26,7 +26,8 @@ public class ChatHub : Hub
             new CreateUserRequest(
                 request.Username,
                 Context.ConnectionId,
-                request.RoomName));
+                request.RoomName,
+                request.Avatar));
 
         await result.Match(
             async onValue => await SendDataToRoomAboutAddingUser(onValue),
