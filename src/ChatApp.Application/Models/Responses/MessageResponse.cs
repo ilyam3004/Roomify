@@ -4,7 +4,7 @@ public record MessageResponse(
     string MessageId,
     string Username,
     string UserId,
-    string Avatar,
+    string UserAvatar,
     string RoomId,
     string Text,
     DateTime Date,

@@ -10,6 +10,6 @@ public interface IMessageService
     Task<ErrorOr<MessageResponse>> SaveMessage(SaveMessageRequest request);
     Task<ErrorOr<Deleted>> RemoveMessage(RemoveMessageRequest request);
     Task<ErrorOr<MessageResponse>> SaveImage(SaveImageRequest request);
-    Task<ErrorOr<ImageUploadResult>> UploadImage(IFormFile image);
+    Task<ErrorOr<ImageUploadResult>> UploadImage(IFormFile image, bool isAvatar);
     Task<List<MessageResponse>> GetAllRoomMessages(string roomId);
 }

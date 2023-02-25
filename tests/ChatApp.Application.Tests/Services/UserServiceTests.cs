@@ -1,15 +1,15 @@
 using ChatApp.Application.Common.Interfaces.Persistence;
 using ChatApp.Application.Common.Validations;
+using ChatApp.Application.Models.Responses;
 using ChatApp.Application.Models.Requests;
+using ChatApp.Application.Tests.Config;
 using ChatApp.Application.Services;
 using ChatApp.Domain.Common.Errors;
 using ChatApp.Domain.Entities;
 using Error = ErrorOr.Error;
 using FluentValidation;
-using AutoFixture;
-using ChatApp.Application.Models.Responses;
-using ChatApp.Application.Tests.Config;
 using MapsterMapper;
+using AutoFixture;
 using Moq;
 
 namespace ChatApp.Application.Tests.Services;
@@ -51,7 +51,8 @@ public class UserServiceTests
             user.Username,
             user.ConnectionId,
             room.RoomId,
-            room.RoomName);
+            room.RoomName,
+            user.Avatar);
 
         // Act
         var actualResponse = await _sut
