@@ -121,14 +121,14 @@ public class MessageService : IMessageService
 
     }
 
-    public async Task<ErrorOr<ImageUploadResult>> UploadImage(IFormFile image)
+    public async Task<ErrorOr<ImageUploadResult>> UploadImage(IFormFile image, bool isAvatar)
     {
         if (image.Length <= 0)
         {
             return Errors.Message.ImageFileIsCorrupted;
         }
 
-        var uploadResult = await _messageRepository.UploadImageToCloudinary(image);
+        var uploadResult = await _messageRepository.UploadImageToCloudinary(image, isAvatar);
 
         return uploadResult is null ? Errors.Message.CantUploadImage : uploadResult;
     }

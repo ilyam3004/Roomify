@@ -1,7 +1,7 @@
-using Dapper;
-using ChatApp.Domain.Entities;
-using ChatApp.Infrastructure.Config;
 using ChatApp.Application.Common.Interfaces.Persistence;
+using ChatApp.Infrastructure.Config;
+using ChatApp.Domain.Entities;
+using Dapper;
 
 namespace ChatApp.Infrastructure.Persistence;
 

@@ -10,6 +10,6 @@ public interface IMessageRepository
     Task RemoveMessageById(string messageId);
     Task RemoveAllMessagesFromRoom(string roomId);
     Task<List<Message>> GetAllRoomMessages(string roomId);
-    Task<ImageUploadResult?> UploadImageToCloudinary(IFormFile image);
+    Task<ImageUploadResult?> UploadImageToCloudinary(IFormFile image, bool isAvatar);
     Task<Message?> GetMessageByIdOrNullIfNotExists(string messageId);
 }

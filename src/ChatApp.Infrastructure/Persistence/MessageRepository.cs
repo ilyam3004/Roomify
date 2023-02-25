@@ -26,13 +26,24 @@ public class MessageRepository : IMessageRepository
         _dbContext = dbContext;
     }
 
-    public async Task<ImageUploadResult?> UploadImageToCloudinary(IFormFile image)
+    public async Task<ImageUploadResult?> UploadImageToCloudinary(IFormFile image, bool isAvatar)
     {
         await using var stream = image.OpenReadStream();
         var uploadParams = new ImageUploadParams
         {
             File = new FileDescription(image.FileName, stream)
         };
+
+        if (isAvatar)
+        {
+            uploadParams.Transformation = new Transformation()
+                .Width(200)
+                .Height(200)
+                .Gravity("faces")
+                .Crop("fill");
+        }
+        
+        
         var uploadResult = _cloudinary.Upload(uploadParams);
 
         if (uploadResult.Error is not null)

@@ -23,10 +23,22 @@ public class ImageController : ApiController
     [HttpPost("uploadImage")]
     public async Task<IActionResult> UploadImage([FromForm]IFormFile image)
     {
-        ErrorOr<ImageUploadResult> result = await _messageService.UploadImage(image);
+        bool isAvatar = false;
+        ErrorOr<ImageUploadResult> result = await _messageService.UploadImage(image, isAvatar);
 
         return result.Match(
             onValue => Ok(_mapper.Map<UploadResultResponse>(onValue)), 
-            Problem);
+            onError => Problem(onError));
+    }
+
+    [HttpPost("uploadAvatar")]
+    public async Task<IActionResult> UploadAvatar([FromForm]IFormFile avatar)
+    {
+        bool isAvatar = true;
+        ErrorOr<ImageUploadResult> result = await _messageService.UploadImage(avatar, isAvatar);
+
+        return result.Match(
+            onValue => Ok(_mapper.Map<UploadResultResponse>(onValue)),
+            onError => Problem(onError));
     }
 }
