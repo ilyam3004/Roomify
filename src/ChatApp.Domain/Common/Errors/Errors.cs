@@ -2,9 +2,9 @@
 
 namespace ChatApp.Domain.Common.Errors;
 
-public partial class Errors
+public abstract class Errors
 {
-    public class User
+    public abstract class User
     {
         public static Error DuplicateUsername => Error.Conflict(
             "User.DuplicateUsername",
@@ -15,7 +15,7 @@ public partial class Errors
                 "User not found");
     }
 
-    public class Message 
+    public abstract class Message 
     {
         public static Error MessageIsNotRemoved => Error.Failure(
             "Message.MessageIsNotRemoved",
@@ -34,7 +34,7 @@ public partial class Errors
             "Cant upload image because of server error");
     }
 
-    public class Room
+    public abstract class Room
     {
         public static Error RoomIsEmpty => Error.Conflict(
             "Room.RoomIsEmpty",

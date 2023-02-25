@@ -1,11 +1,11 @@
 using ChatApp.Application.Common.Interfaces.Persistence;
 using ChatApp.Infrastructure.Config;
 using Microsoft.Extensions.Options;
+using Microsoft.AspNetCore.Http;
+using CloudinaryDotNet.Actions;
 using ChatApp.Domain.Entities;
 using CloudinaryDotNet;
-using CloudinaryDotNet.Actions;
 using Dapper;
-using Microsoft.AspNetCore.Http;
 
 namespace ChatApp.Infrastructure.Persistence;
 
@@ -55,7 +55,7 @@ public class MessageRepository : IMessageRepository
         using var connection = _dbContext.CreateConnection();
         await connection.ExecuteAsync(query, message);
 
-        return (await GetMessageByIdOrNullIfNotExists(message.MessageId))!;
+        return message;
     }
 
     public async Task RemoveMessageById(string messageId)
