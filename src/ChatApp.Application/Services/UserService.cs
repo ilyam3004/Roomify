@@ -101,7 +101,6 @@ public class UserService : IUserService
         return _mapper.Map<UserResponse>((user, room));
     }
 
-
     private static List<Error> ConvertValidationErrorToError(List<ValidationFailure> failures)
     {
         return failures.ConvertAll(
