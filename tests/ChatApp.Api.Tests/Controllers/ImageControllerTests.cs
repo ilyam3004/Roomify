@@ -71,7 +71,7 @@ public class ImageControllerTests
         bool isAvatar = false;
         
         _messageServiceMock
-            .Setup(x => x.UploadImage(image, false))
+            .Setup(x => x.UploadImage(image, isAvatar))
             .ReturnsAsync(Errors.Message.ImageFileIsCorrupted);
         
         //Act
