@@ -3,4 +3,5 @@
 public record CreateUserRequest(
     string Username,
     string ConnectionId,
-    string RoomName);
+    string RoomName,
+    string Avatar);

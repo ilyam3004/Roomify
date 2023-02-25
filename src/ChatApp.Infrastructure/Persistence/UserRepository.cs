@@ -1,7 +1,7 @@
-using Dapper;
-using ChatApp.Domain.Entities;
-using ChatApp.Infrastructure.Config;
 using ChatApp.Application.Common.Interfaces.Persistence;
+using ChatApp.Infrastructure.Config;
+using ChatApp.Domain.Entities;
+using Dapper;
 
 namespace ChatApp.Infrastructure.Persistence;
 
@@ -18,7 +18,12 @@ public class UserRepository : IUserRepository
 
     public async Task<User> AddUser(User user)
     {
+<<<<<<< HEAD
         var query = "INSERT INTO [ChatUser] (UserId, Username, ConnectionId, RoomId, HasLeft) VALUES (@UserId, @Username, @ConnectionId, @RoomId, @HasLeft)";
+=======
+        var query = "INSERT INTO [ChatUser] (UserId, Username, ConnectionId, RoomId, HasLeft, Avatar) " +
+                    "VALUES (@UserId, @Username, @ConnectionId, @RoomId, @HasLeft, @Avatar)";
+>>>>>>> release/1.2
 
         using var connection = _dbContext.CreateConnection();
         await connection.ExecuteAsync(query, user);

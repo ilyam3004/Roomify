@@ -9,7 +9,10 @@ using CloudinaryDotNet.Actions;
 using ChatApp.Domain.Entities;
 using Error = ErrorOr.Error;
 using FluentValidation;
+<<<<<<< HEAD
 using CloudinaryDotNet;
+=======
+>>>>>>> release/1.2
 using MapsterMapper;
 using AutoFixture;
 using ErrorOr;
@@ -335,13 +338,14 @@ public class MessageServiceTests
             PublicId = Guid.NewGuid().ToString(),
             Url = new Uri("https://test-image-url.com")
         };
+        bool isAvatar = false;
 
         _messageRepositoryMock
-            .Setup(m => m.UploadImageToCloudinary(image))
+            .Setup(m => m.UploadImageToCloudinary(image, isAvatar))
             .ReturnsAsync(uploadResult);
 
         //Act
-        var actualResponse = await _sut.UploadImage(image);
+        var actualResponse = await _sut.UploadImage(image, isAvatar);
         
         //Assert
         Assert.Equal(uploadResult.Url, actualResponse.Value.Url);
@@ -362,9 +366,9 @@ public class MessageServiceTests
         stream.Position = 0;
         
         IFormFile image = new FormFile(stream, 0, 0, "id_from_form", fileName);
-
+        bool isAvatar = false;
         //Act
-        var actualResponse = await _sut.UploadImage(image);
+        var actualResponse = await _sut.UploadImage(image, isAvatar);
         
         //Assert
         Assert.Equal(Errors.Message.ImageFileIsCorrupted, actualResponse.FirstError);
@@ -385,13 +389,15 @@ public class MessageServiceTests
         stream.Position = 0;
         
         IFormFile image = new FormFile(stream, 0, stream.Length, "id_from_form", fileName);
+
+        bool isAvatar = false;
         
         _messageRepositoryMock
-            .Setup(m => m.UploadImageToCloudinary(image))
+            .Setup(m => m.UploadImageToCloudinary(image, isAvatar))
             .ReturnsAsync(() => null);
         
         //Act
-        var actualResponse = await _sut.UploadImage(image);
+        var actualResponse = await _sut.UploadImage(image, isAvatar);
         
         //Assert
         Assert.Equal(Errors.Message.CantUploadImage, actualResponse.FirstError);

@@ -12,6 +12,7 @@ public class MessageMappingConfig : IRegister
             .Map(dest => dest.MessageId, src => src.Item1.MessageId)
             .Map(dest => dest.Username, src => src.Item2.Username)
             .Map(dest => dest.UserId, src => src.Item2.UserId)
+            .Map(dest => dest.UserAvatar, src => src.Item2.Avatar)
             .Map(dest => dest.RoomId, src => src.Item2.RoomId)
             .Map(dest => dest.Text, src => src.Item1.Text)
             .Map(dest => dest.Date, src => src.Item1.Date)

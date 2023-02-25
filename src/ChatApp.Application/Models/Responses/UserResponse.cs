@@ -5,4 +5,5 @@ public record UserResponse(
     string Username,
     string ConnectionId,
     string RoomId,
-    string RoomName);
+    string RoomName,
+    string Avatar);

@@ -83,6 +83,7 @@ public class MessageService : IMessageService
         {
             await _messageRepository.RemoveMessageById(message.MessageId);
             return Result.Deleted;
+            
         }
 
         return Errors.Message.MessageIsNotRemoved;
@@ -120,14 +121,14 @@ public class MessageService : IMessageService
 
     }
 
-    public async Task<ErrorOr<ImageUploadResult>> UploadImage(IFormFile image)
+    public async Task<ErrorOr<ImageUploadResult>> UploadImage(IFormFile image, bool isAvatar)
     {
         if (image.Length <= 0)
         {
             return Errors.Message.ImageFileIsCorrupted;
         }
 
-        var uploadResult = await _messageRepository.UploadImageToCloudinary(image);
+        var uploadResult = await _messageRepository.UploadImageToCloudinary(image, isAvatar);
 
         return uploadResult is null ? Errors.Message.CantUploadImage : uploadResult;
     }
@@ -151,7 +152,7 @@ public class MessageService : IMessageService
         return messages;
     }
 
-    private List<Error> ConvertValidationErrorToError(List<ValidationFailure> failures)
+    private static List<Error> ConvertValidationErrorToError(List<ValidationFailure> failures)
     {
         return failures.ConvertAll(
             validationFaliure => Error.Validation(

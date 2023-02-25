@@ -29,5 +29,9 @@ public class CreateUserRequestValidator : AbstractValidator<CreateUserRequest>
             .NotNull()
             .NotEmpty()
             .WithMessage("ConnectionId should be not empty");
+
+        RuleFor(u => u.Avatar)
+            .NotNull()
+            .WithMessage("User avatar should not be null");
     }
 }
