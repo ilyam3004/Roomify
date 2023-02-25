@@ -9,10 +9,6 @@ using CloudinaryDotNet.Actions;
 using ChatApp.Domain.Entities;
 using Error = ErrorOr.Error;
 using FluentValidation;
-<<<<<<< HEAD
-using CloudinaryDotNet;
-=======
->>>>>>> release/1.2
 using MapsterMapper;
 using AutoFixture;
 using ErrorOr;
