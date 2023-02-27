@@ -6,28 +6,39 @@ using ChatApp.Application.Services;
 using Microsoft.AspNetCore.Mvc;
 using ChatApp.Contracts.Rooms;
 using ErrorOr;
+using MediatR;
 
 namespace ChatApp.Api.Hubs;
+
+public record JoinUserCommand(
+    string Username,
+    string RoomName,
+    string Avatar) : IRequest<ErrorOr<UserResponse>>;
 
 public class ChatHub : Hub
 {
     private readonly IUserService _userService;
     private readonly IMessageService _messageService;
+    private readonly ISender _mediator;
 
-    public ChatHub(IUserService userService, IMessageService messageService)
+    public ChatHub(
+        IUserService userService,
+        IMessageService messageService,
+        ISender mediator)
     {
         _userService = userService;
         _messageService = messageService;
+        _mediator = mediator;
     }
 
     public async Task JoinRoom(JoinUserRequest request)
     {
-        ErrorOr<UserResponse> result = await _userService.AddUserToRoom(
-            new CreateUserRequest(
-                request.Username,
-                Context.ConnectionId,
-                request.RoomName,
-                request.Avatar));
+        var command = new JoinUserCommand(
+            request.Username, 
+            request.RoomName, 
+            request.Avatar);
+
+        ErrorOr<UserResponse> result = await _mediator.Send(command);
 
         await result.Match(
             async onValue => await SendDataToRoomAboutAddingUser(onValue),
