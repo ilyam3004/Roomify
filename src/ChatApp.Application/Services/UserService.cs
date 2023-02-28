@@ -1,6 +1,6 @@
 using ChatApp.Application.Common.Interfaces.Persistence;
-using ChatApp.Application.Models.Requests;
 using ChatApp.Application.Models.Responses;
+using ChatApp.Application.Models.Requests;
 using ChatApp.Domain.Common.Errors;
 using FluentValidation.Results;
 using ChatApp.Domain.Entities;

@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using ChatApp.Application.Models.Responses;
 using ChatApp.Application.Models.Requests;
+using ChatApp.Application.Users.JoinRoom;
 using Microsoft.AspNetCore.SignalR;
 using ChatApp.Application.Services;
 using Microsoft.AspNetCore.Mvc;
@@ -9,11 +10,6 @@ using ErrorOr;
 using MediatR;
 
 namespace ChatApp.Api.Hubs;
-
-public record JoinUserCommand(
-    string Username,
-    string RoomName,
-    string Avatar) : IRequest<ErrorOr<UserResponse>>;
 
 public class ChatHub : Hub
 {
@@ -33,9 +29,10 @@ public class ChatHub : Hub
 
     public async Task JoinRoom(JoinUserRequest request)
     {
-        var command = new JoinUserCommand(
+        var command = new JoinRoomCommand(
             request.Username, 
-            request.RoomName, 
+            request.RoomName,
+            Context.ConnectionId, 
             request.Avatar);
 
         ErrorOr<UserResponse> result = await _mediator.Send(command);
