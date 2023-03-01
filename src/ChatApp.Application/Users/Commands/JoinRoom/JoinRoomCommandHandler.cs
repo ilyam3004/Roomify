@@ -9,7 +9,7 @@ using MapsterMapper;
 using MediatR;
 using ErrorOr;
 
-namespace ChatApp.Application.Users.JoinRoom;
+namespace ChatApp.Application.Users.Commands.JoinRoom;
 
 public class JoinUserCommandHandler :
     IRequestHandler<JoinRoomCommand, ErrorOr<UserResponse>>
@@ -17,7 +17,6 @@ public class JoinUserCommandHandler :
     private readonly IValidator<JoinRoomCommand> _commandValidator;
     private readonly IUserRepository _userRepository;
     private readonly IMapper _mapper;
-
 
     public JoinUserCommandHandler(
         IUserRepository userRepository, 

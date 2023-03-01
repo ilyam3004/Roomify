@@ -1,10 +1,11 @@
+using ChatApp.Application.Models.Requests;
 using FluentValidation;
 
-namespace ChatApp.Application.Users.Commands.JoinRoom;
+namespace ChatApp.Application.Common.Validations;
 
-public class JoinRoomCommandValidator : AbstractValidator<JoinRoomCommand>
+public class CreateUserRequestValidator : AbstractValidator<CreateUserRequest>
 {
-    public JoinRoomCommandValidator()
+    public CreateUserRequestValidator()
     {
         RuleFor(u => u.Username)
             .NotNull()

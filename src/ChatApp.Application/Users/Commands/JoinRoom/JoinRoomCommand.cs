@@ -2,7 +2,7 @@ using ChatApp.Application.Models.Responses;
 using ErrorOr;
 using MediatR;
 
-namespace ChatApp.Application.Users.JoinRoom;
+namespace ChatApp.Application.Users.Commands.JoinRoom;
 
 public record JoinRoomCommand(
     string Username,
