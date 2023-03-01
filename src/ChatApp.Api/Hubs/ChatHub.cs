@@ -1,7 +1,10 @@
+using ChatApp.Application.Users.Queries.GetUserByConnId;
+using ChatApp.Application.Users.Queries.GetUserList;
+using ChatApp.Application.Users.Commands.LeaveRoom;
+using ChatApp.Application.Users.Commands.JoinRoom;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using ChatApp.Application.Models.Responses;
 using ChatApp.Application.Models.Requests;
-using ChatApp.Application.Users.JoinRoom;
 using Microsoft.AspNetCore.SignalR;
 using ChatApp.Application.Services;
 using Microsoft.AspNetCore.Mvc;
@@ -13,16 +16,13 @@ namespace ChatApp.Api.Hubs;
 
 public class ChatHub : Hub
 {
-    private readonly IUserService _userService;
     private readonly IMessageService _messageService;
     private readonly ISender _mediator;
 
     public ChatHub(
-        IUserService userService,
         IMessageService messageService,
         ISender mediator)
     {
-        _userService = userService;
         _messageService = messageService;
         _mediator = mediator;
     }
@@ -45,8 +45,9 @@ public class ChatHub : Hub
 
     public override async Task OnDisconnectedAsync(Exception? exception)
     {
-        ErrorOr<UserResponse> result = await _userService
-            .RemoveUserFromRoom(Context.ConnectionId);
+        var comamnd = new LeaveRoomCommand(Context.ConnectionId);
+        
+        ErrorOr<UserResponse> result = await _mediator.Send(comamnd);
 
         await result.Match(
             async onValue => await SendDataToRoomAboutUserLeaving(onValue),
@@ -80,8 +81,8 @@ public class ChatHub : Hub
     
     public async Task SendUserMessage(string message)
     {
-        ErrorOr<UserResponse> result = await _userService
-            .GetUserByConnectionId(Context.ConnectionId);
+        var query = new GetUserByConnIdQuery(Context.ConnectionId);
+        ErrorOr<UserResponse> result = await _mediator.Send(query);
 
         await result.Match(
             async onValue => await SendMessageToRoom(new SendMessageRequest(
@@ -145,7 +146,9 @@ public class ChatHub : Hub
 
     private async Task SendUserList(string roomId)
     {
-        List<UserResponse> result = await _userService.GetUserList(roomId);
+        var query = new GetUserListQuery(roomId);
+
+        List<UserResponse> result = await _mediator.Send(query);
 
         await Clients.Group(roomId)
             .SendAsync("ReceiveUserList", result);

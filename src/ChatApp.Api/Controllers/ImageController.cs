@@ -24,26 +24,13 @@ public class ImageController : ApiController
     }
 
     [HttpPost("uploadImage")]
-    public async Task<IActionResult> UploadImage([FromForm]IFormFile image, bool isAvatar)
+    public async Task<IActionResult> UploadImage([FromForm]IFormFile image, [FromForm]string isAvatar)
     {
-        var command = new UploadImageCommand(image, isAvatar);
+        var command = new UploadImageCommand(image, bool.Parse(isAvatar));
         ErrorOr<ImageUploadResult> result = await _mediator.Send(command);
 
         return result.Match(
             onValue => Ok(_mapper.Map<UploadResultResponse>(onValue)), 
-            onError => Problem(onError));
-    }
-
-    [HttpPost("uploadAvatar")]
-    public async Task<IActionResult> UploadAvatar([FromForm]IFormFile avatar)
-    {
-        bool isAvatar = true;
-        var command = new UploadImageCommand(avatar, isAvatar);
-
-        ErrorOr<ImageUploadResult> result = await _mediator.Send(command);
-
-        return result.Match(
-            onValue => Ok(_mapper.Map<UploadResultResponse>(onValue)),
             onError => Problem(onError));
     }
 }
