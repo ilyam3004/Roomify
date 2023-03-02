@@ -3,7 +3,7 @@ using CloudinaryDotNet.Actions;
 using ErrorOr;
 using MediatR;
 
-namespace ChatApp.Application.Images.Commands.UploadImage;
+namespace ChatApp.Application.Messages.Commands.UploadImage;
 
 public record UploadImageCommand(
     IFormFile image,

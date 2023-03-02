@@ -1,4 +1,6 @@
 ﻿using ChatApp.Application.Models.Responses;
+using ChatApp.Application.Users.Commands.JoinRoom;
+using ChatApp.Contracts.Rooms;
 using ChatApp.Domain.Entities;
 using Mapster;
 

@@ -28,7 +28,7 @@ public class ChatHubTests : HubUnitTestsBase
     public async Task JoinRoom_ShouldSendAllDataToRoom_WhenServiceReturnsSuccess()
     {
         // Arrange
-        var joinUserRequest = _fixture.Create<JoinUserRequest>();
+        var joinUserRequest = _fixture.Create<JoinRoomRequest>();
 
         var userResponse = _fixture.Create<UserResponse>();
 
@@ -58,7 +58,7 @@ public class ChatHubTests : HubUnitTestsBase
     public async Task JoinRoom_ShouldSendErrorToClient_WhenAddUserToRoomReturnsError()
     {
         // Arrange
-        var joinUserRequest = _fixture.Create<JoinUserRequest>();
+        var joinUserRequest = _fixture.Create<JoinRoomRequest>();
 
         _userServiceMock
             .Setup(a => a.AddUserToRoom(It.IsAny<CreateUserRequest>()))

@@ -1,11 +1,11 @@
-﻿using ChatApp.Application.Models.Requests;
 using FluentValidation;
 
-namespace ChatApp.Application.Common.Validations;
+namespace ChatApp.Application.Messages.Commands.SaveImage;
 
-public class SaveImageRequestValidator : AbstractValidator<SaveImageRequest>
+public class SaveImageCommandValidator : 
+    AbstractValidator<SaveImageCommand>
 {
-    public SaveImageRequestValidator()
+    public SaveImageCommandValidator()
     {
         RuleFor(m => m.UserId)
             .NotNull()

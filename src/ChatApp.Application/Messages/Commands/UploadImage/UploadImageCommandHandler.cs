@@ -4,7 +4,7 @@ using CloudinaryDotNet.Actions;
 using ErrorOr;
 using MediatR;
 
-namespace ChatApp.Application.Images.Commands.UploadImage;
+namespace ChatApp.Application.Messages.Commands.UploadImage;
 
 public class UploadImageCommandHandler : 
     IRequestHandler<UploadImageCommand, ErrorOr<ImageUploadResult>>

@@ -1,4 +1,4 @@
-﻿using ChatApp.Application.Images.Commands.UploadImage;
+﻿using ChatApp.Application.Messages.Commands.UploadImage;
 using ChatApp.Contracts.Rooms.Responses;
 using Microsoft.AspNetCore.Mvc;
 using CloudinaryDotNet.Actions;

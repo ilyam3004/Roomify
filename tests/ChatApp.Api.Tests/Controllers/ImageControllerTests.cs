@@ -1,5 +1,4 @@
 ﻿using ChatApp.Api.Controllers;
-using ChatApp.Application.Services;
 using ChatApp.Domain.Common.Errors;
 using CloudinaryDotNet.Actions;
 using MapsterMapper;

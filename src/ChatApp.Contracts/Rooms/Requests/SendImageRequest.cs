@@ -3,5 +3,4 @@
 public record SendImageRequest(
     string UserId,
     string RoomId,
-    string Username, 
     string ImageUrl);
