@@ -1,11 +1,10 @@
-﻿using ChatApp.Application.Models.Requests;
 using FluentValidation;
 
-namespace ChatApp.Application.Common.Validations;
+namespace ChatApp.Application.Messages.Commands.SaveMessage;
 
-public class SaveMessageRequestValidator : AbstractValidator<SaveMessageRequest>
+public class SaveMessageCommandValidator : AbstractValidator<SaveMessageCommand>
 {
-    public SaveMessageRequestValidator()
+    public SaveMessageCommandValidator()
     {
         RuleFor(m => m.Text)
             .NotNull()
