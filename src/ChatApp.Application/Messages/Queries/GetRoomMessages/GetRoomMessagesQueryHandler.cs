@@ -32,7 +32,8 @@ public class GetRoomMessagesQueryHandler :
         return await MapRoomMessagesResponseResult(dbMessages);
     }
 
-    private async Task<List<MessageResponse>> MapRoomMessagesResponseResult(List<Message> dbMessages)
+    private async Task<List<MessageResponse>> MapRoomMessagesResponseResult(
+        List<Message> dbMessages)
     {
         List<MessageResponse> messages = new();
         foreach (var dbMessage in dbMessages)

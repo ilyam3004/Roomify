@@ -11,7 +11,8 @@ public class UploadImageCommandHandler :
 {
     private readonly IMessageRepository _messageRepository;
 
-    public UploadImageCommandHandler(IMessageRepository messageRepository)
+    public UploadImageCommandHandler(
+        IMessageRepository messageRepository)
     {
         _messageRepository = messageRepository;
     }

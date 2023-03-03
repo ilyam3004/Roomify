@@ -18,15 +18,17 @@ public class RemoveMessageCommandHandler
         _userRepository = userRepository;
     }
 
-    public async Task<ErrorOr<Deleted>> Handle(RemoveMessageCommand request, CancellationToken cancellationToken)
+    public async Task<ErrorOr<Deleted>> Handle(
+        RemoveMessageCommand command, 
+        CancellationToken cancellationToken)
     {
-        var message = await _messageRepository.GetMessageByIdOrNullIfNotExists(request.MessageId);
+        var message = await _messageRepository.GetMessageByIdOrNullIfNotExists(command.MessageId);
         if (message is null)
         {
             return Errors.Message.MessageNotFound;
         }
 
-        var user = await _userRepository.GetUserByConnectionIdOrNull(request.ConnectionId);
+        var user = await _userRepository.GetUserByConnectionIdOrNull(command.ConnectionId);
         if (user is null)
         {
             return Errors.User.UserNotFound;

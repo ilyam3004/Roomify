@@ -6,21 +6,22 @@ using ChatApp.Domain.Entities;
 using MapsterMapper;
 using ErrorOr;
 using MediatR;
+using FluentValidation;
 
 namespace ChatApp.Application.Messages.Commands.SaveImage;
 
 public class SaveImageCommandHandler : 
     IRequestHandler<SaveImageCommand, ErrorOr<MessageResponse>>
 {
-    private readonly IUserRepository _userRepository;
-    private readonly SaveImageCommandValidator _imageMessageValidator;
+    private readonly IValidator<SaveImageCommand> _imageMessageValidator;
     private readonly IMessageRepository _messageRepository;
+    private readonly IUserRepository _userRepository;
     private readonly IMapper _mapper;
 
     public SaveImageCommandHandler(
         IUserRepository userRepository,
         IMessageRepository messageRepository,
-        SaveImageCommandValidator imageMessageValidator,
+        IValidator<SaveImageCommand> imageMessageValidator,
         IMapper mapper)
     {
         _userRepository = userRepository;
@@ -30,15 +31,15 @@ public class SaveImageCommandHandler :
     }
 
     public async Task<ErrorOr<MessageResponse>> Handle(
-        SaveImageCommand request, 
+        SaveImageCommand command, 
         CancellationToken cancellationToken)
     {
-        if (!await _userRepository.UserExists(request.UserId))
+        if (!await _userRepository.UserExists(command.UserId))
         {
             return Errors.User.UserNotFound;
         }
         
-        var validateResult = await _imageMessageValidator.ValidateAsync(request);
+        var validateResult = await _imageMessageValidator.ValidateAsync(command);
 
         if (!validateResult.IsValid)
         {
@@ -48,13 +49,13 @@ public class SaveImageCommandHandler :
         var dbMessage = await _messageRepository.SaveMessage(new Message
         {
             MessageId = Guid.NewGuid().ToString(),
-            RoomId = request.RoomId,
-            UserId = request.UserId,
+            RoomId = command.RoomId,
+            UserId = command.UserId,
             Text = "",
             Date = DateTime.UtcNow,
             FromUser = true,
             IsImage = true,
-            ImageUrl = request.ImageUrl
+            ImageUrl = command.ImageUrl
         });
 
         var user = await _userRepository.GetUserById(dbMessage.UserId);

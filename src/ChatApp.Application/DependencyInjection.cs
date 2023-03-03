@@ -1,10 +1,10 @@
 using ChatApp.Application.Messages.Commands.SaveMessage;
+using ChatApp.Application.Messages.Commands.SaveImage;
 using ChatApp.Application.Users.Commands.JoinRoom;
 using Microsoft.Extensions.DependencyInjection;
 using System.Reflection;
 using FluentValidation;
 using MediatR;
-using ChatApp.Application.Messages.Commands.SaveImage;
 
 namespace ChatApp.Application;
 

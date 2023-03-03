@@ -8,13 +8,13 @@ using MediatR;
 
 namespace ChatApp.Application.Users.Queries.GetUserByConnId;
 
-public class GetUserByConnIdHandler : 
+public class GetUserByConnIdQueryHandler : 
     IRequestHandler<GetUserByConnIdQuery, ErrorOr<UserResponse>>
 {
     private readonly IUserRepository _userRepository;
     private readonly IMapper _mapper;
 
-    public GetUserByConnIdHandler(
+    public GetUserByConnIdQueryHandler(
         IUserRepository userRepository, 
         IMapper mapper)
     {
