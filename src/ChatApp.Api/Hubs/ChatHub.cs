@@ -1,33 +1,37 @@
+using ChatApp.Application.Messages.Queries.GetRoomMessages;
+using ChatApp.Application.Messages.Commands.SaveMessage;
+using ChatApp.Application.Users.Queries.GetUserByConnId;
+using ChatApp.Application.Messages.Commands.SaveImage;
+using ChatApp.Application.Users.Queries.GetUserList;
+using ChatApp.Application.Users.Commands.LeaveRoom;
+using ChatApp.Application.Users.Commands.JoinRoom;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using ChatApp.Application.Models.Responses;
-using ChatApp.Application.Models.Requests;
 using Microsoft.AspNetCore.SignalR;
-using ChatApp.Application.Services;
 using Microsoft.AspNetCore.Mvc;
 using ChatApp.Contracts.Rooms;
+using MapsterMapper;
 using ErrorOr;
+using MediatR;
 
 namespace ChatApp.Api.Hubs;
 
 public class ChatHub : Hub
 {
-    private readonly IUserService _userService;
-    private readonly IMessageService _messageService;
+    private readonly ISender _mediator;
+    private readonly IMapper _mapper;
 
-    public ChatHub(IUserService userService, IMessageService messageService)
+    public ChatHub(ISender mediator, IMapper mapper)
     {
-        _userService = userService;
-        _messageService = messageService;
+        _mediator = mediator;
+        _mapper = mapper;
     }
 
-    public async Task JoinRoom(JoinUserRequest request)
+    public async Task JoinRoom(JoinRoomRequest request)
     {
-        ErrorOr<UserResponse> result = await _userService.AddUserToRoom(
-            new CreateUserRequest(
-                request.Username,
-                Context.ConnectionId,
-                request.RoomName,
-                request.Avatar));
+        var command = _mapper.Map<JoinRoomCommand>((request, Context.ConnectionId));
+            
+        ErrorOr<UserResponse> result = await _mediator.Send(command);
 
         await result.Match(
             async onValue => await SendDataToRoomAboutAddingUser(onValue),
@@ -37,8 +41,9 @@ public class ChatHub : Hub
 
     public override async Task OnDisconnectedAsync(Exception? exception)
     {
-        ErrorOr<UserResponse> result = await _userService
-            .RemoveUserFromRoom(Context.ConnectionId);
+        var comamnd = new LeaveRoomCommand(Context.ConnectionId);
+        
+        ErrorOr<UserResponse> result = await _mediator.Send(comamnd);
 
         await result.Match(
             async onValue => await SendDataToRoomAboutUserLeaving(onValue),
@@ -72,8 +77,8 @@ public class ChatHub : Hub
     
     public async Task SendUserMessage(string message)
     {
-        ErrorOr<UserResponse> result = await _userService
-            .GetUserByConnectionId(Context.ConnectionId);
+        var query = new GetUserByConnIdQuery(Context.ConnectionId);
+        ErrorOr<UserResponse> result = await _mediator.Send(query);
 
         await result.Match(
             async onValue => await SendMessageToRoom(new SendMessageRequest(
@@ -88,7 +93,8 @@ public class ChatHub : Hub
 
     public async Task SendAllRoomMessages(string roomId)
     {
-        List<MessageResponse> result = await _messageService.GetAllRoomMessages(roomId);
+        var query = new GetRoomMessagesQuery(roomId);
+        List<MessageResponse> result = await _mediator.Send(query);
 
         await Clients.Client(Context.ConnectionId)
             .SendAsync("ReceiveRoomMessages", result);
@@ -96,11 +102,8 @@ public class ChatHub : Hub
 
     public async Task SendImageToRoom(SendImageRequest request)
     {
-        ErrorOr<MessageResponse> result = await _messageService.SaveImage(
-            new SaveImageRequest(
-                request.UserId,
-                request.RoomId,
-                request.ImageUrl));
+        var command = _mapper.Map<SaveImageCommand>(request);
+        ErrorOr<MessageResponse> result = await _mediator.Send(command);
         
         await result.Match(
             async onValue => await Clients.Group(onValue.RoomId)
@@ -111,13 +114,8 @@ public class ChatHub : Hub
 
     private async Task SendMessageToRoom(SendMessageRequest request)
     {
-        ErrorOr<MessageResponse> result = await _messageService.SaveMessage(
-            new SaveMessageRequest(
-                request.UserId,
-                request.Username,
-                request.RoomId,
-                request.Text,
-                request.FromUser));
+        var command = _mapper.Map<SaveMessageCommand>(request);
+        ErrorOr<MessageResponse> result = await _mediator.Send(command);
 
         await result.Match(
             async onValue => await Clients.Group(onValue.RoomId)
@@ -137,7 +135,9 @@ public class ChatHub : Hub
 
     private async Task SendUserList(string roomId)
     {
-        List<UserResponse> result = await _userService.GetUserList(roomId);
+        var query = new GetUserListQuery(roomId);
+
+        List<UserResponse> result = await _mediator.Send(query);
 
         await Clients.Group(roomId)
             .SendAsync("ReceiveUserList", result);

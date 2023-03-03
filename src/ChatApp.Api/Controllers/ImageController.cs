@@ -1,9 +1,10 @@
-﻿using ChatApp.Contracts.Rooms.Responses;
-using ChatApp.Application.Services;
+﻿using ChatApp.Application.Messages.Commands.UploadImage;
+using ChatApp.Contracts.Rooms.Responses;
 using Microsoft.AspNetCore.Mvc;
 using CloudinaryDotNet.Actions;
-using ErrorOr;
 using MapsterMapper;
+using MediatR;
+using ErrorOr;
 
 namespace ChatApp.Api.Controllers;
 
@@ -11,34 +12,25 @@ namespace ChatApp.Api.Controllers;
 [Route("img")]
 public class ImageController : ApiController
 {
-    private readonly IMessageService _messageService;
+    private readonly ISender _mediator;
     private readonly IMapper _mapper;
-    
-    public ImageController(IMessageService messageService, IMapper mapper)
+
+    public ImageController(
+        IMapper mapper, 
+        ISender mediator)
     {
-        _messageService = messageService;
+        _mediator = mediator;
         _mapper = mapper;
     }
 
     [HttpPost("uploadImage")]
-    public async Task<IActionResult> UploadImage([FromForm]IFormFile image)
+    public async Task<IActionResult> UploadImage([FromForm]IFormFile image, [FromForm]string isAvatar)
     {
-        bool isAvatar = false;
-        ErrorOr<ImageUploadResult> result = await _messageService.UploadImage(image, isAvatar);
+        var command = new UploadImageCommand(image, bool.Parse(isAvatar));
+        ErrorOr<ImageUploadResult> result = await _mediator.Send(command);
 
         return result.Match(
             onValue => Ok(_mapper.Map<UploadResultResponse>(onValue)), 
-            onError => Problem(onError));
-    }
-
-    [HttpPost("uploadAvatar")]
-    public async Task<IActionResult> UploadAvatar([FromForm]IFormFile avatar)
-    {
-        bool isAvatar = true;
-        ErrorOr<ImageUploadResult> result = await _messageService.UploadImage(avatar, isAvatar);
-
-        return result.Match(
-            onValue => Ok(_mapper.Map<UploadResultResponse>(onValue)),
             onError => Problem(onError));
     }
 }

@@ -1,6 +1,8 @@
 src/ChatApp.Api/bin/
 src/ChatApp.Api/obj/
 
+.vscode/
+
 src/ChatApp.Application/bin/
 src/ChatApp.Application/obj/
 
