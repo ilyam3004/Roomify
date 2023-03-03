@@ -12,10 +12,10 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddApplication(this IServiceCollection services)
     {
+        var assembly = Assembly.GetExecutingAssembly();
         services.AddMediatR(Assembly.GetExecutingAssembly());
-        services.AddValidatorsFromAssemblyContaining<JoinRoomCommandValidator>();
-        services.AddValidatorsFromAssemblyContaining<SaveMessageCommandValidator>();
-        services.AddValidatorsFromAssemblyContaining<SaveImageCommandValidator>();
+        services.AddValidatorsFromAssembly(assembly);
+        
         return services;
     }
 }
