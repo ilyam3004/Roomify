@@ -1,5 +1,5 @@
-using ChatApp.Application.Common.Interfaces.Persistence;
 using ChatApp.Application.Users.Queries.GetUserByConnId;
+using ChatApp.Application.Common.Interfaces;
 using ChatApp.Application.Models.Responses;
 using ChatApp.Application.Tests.Config;
 using ChatApp.Domain.Common.Errors;
@@ -12,7 +12,7 @@ namespace ChatApp.Application.Tests.Users.Queries;
 
 public class GetUserByConnIdQueryHandlerTests
 {
-    private readonly Mock<IUserRepository> _userRepositoryMock = new();
+    private readonly Mock<IUnitOfWork> _unitOfWorkMock = new();
     private readonly IMapper _mapper = MapsterConfigForTesting.GetMapper();
     private readonly GetUserByConnIdQueryHandler _sut;
     private readonly Fixture _fixture;
@@ -21,7 +21,7 @@ public class GetUserByConnIdQueryHandlerTests
     {
         _fixture = new Fixture();
         _sut = new GetUserByConnIdQueryHandler(
-            _userRepositoryMock.Object,
+            _unitOfWorkMock.Object,
             _mapper);
     }
 
@@ -31,16 +31,18 @@ public class GetUserByConnIdQueryHandlerTests
         // Arrange
         var user = _fixture.Create<User>();
 
-        _userRepositoryMock
-            .Setup(x => x.GetUserByConnectionIdOrNull(user.ConnectionId))
+        _unitOfWorkMock
+            .Setup(u => 
+                u.Users.GetUserByConnectionIdOrNull(user.ConnectionId))
             .ReturnsAsync(user);
 
         var room = _fixture.Build<Room>()
             .With(r => r.RoomId, user.RoomId)
             .Create();
 
-        _userRepositoryMock
-            .Setup(x => x.GetRoomById(room.RoomId))
+        _unitOfWorkMock
+            .Setup(u => u.
+                Users.GetRoomById(room.RoomId))
             .ReturnsAsync(room);
 
         var expectedResponse = new UserResponse(
@@ -66,8 +68,9 @@ public class GetUserByConnIdQueryHandlerTests
         //Arrange
         var connectionId = Guid.NewGuid().ToString();
 
-        _userRepositoryMock
-            .Setup(x => x.GetUserByConnectionIdOrNull(connectionId))
+        _unitOfWorkMock
+            .Setup(u => 
+                u.Users.GetUserByConnectionIdOrNull(connectionId))
             .ReturnsAsync(() => null);
         var query = new GetUserByConnIdQuery(Guid.NewGuid().ToString());
 

@@ -1,6 +1,7 @@
 using ChatApp.Application.Common.Interfaces.Persistence;
 using ChatApp.Application.Models.Responses;
 using ChatApp.Application.Common.Errors;
+using ChatApp.Application.Common.Interfaces;
 using ChatApp.Domain.Common.Errors;
 using ChatApp.Domain.Entities;
 using FluentValidation;
@@ -13,20 +14,17 @@ namespace ChatApp.Application.Messages.Commands.SaveMessage;
 public class SaveMessageCommandHandler : 
     IRequestHandler<SaveMessageCommand, ErrorOr<MessageResponse>>
 {
-    private readonly IUserRepository _userRepository;
+    private readonly IUnitOfWork _unitOfWork;
     private readonly IValidator<SaveMessageCommand> _textMessageValidator;
-    private readonly IMessageRepository _messageRepository;
     private readonly IMapper _mapper;
 
     public SaveMessageCommandHandler(
-        IUserRepository userRepository,
+        IUnitOfWork unitOfWork,
         IValidator<SaveMessageCommand> textMessageValidator,
-        IMessageRepository messageRepository,
         IMapper mapper)
     {
-        _userRepository = userRepository;
+        _unitOfWork = unitOfWork;
         _textMessageValidator = textMessageValidator;
-        _messageRepository = messageRepository;
         _mapper = mapper;
     }
 
@@ -34,7 +32,7 @@ public class SaveMessageCommandHandler :
         SaveMessageCommand command, 
         CancellationToken cancellationToken)
     {
-        if (!await _userRepository.UserExists(command.UserId))
+        if (!await _unitOfWork.Users.UserExists(command.UserId))
         {
             return Errors.User.UserNotFound;
         }
@@ -46,7 +44,7 @@ public class SaveMessageCommandHandler :
             return ErrorConverter.ConvertValidationErrors(validateResult.Errors);
         }
         
-        var dbMessage = await _messageRepository.SaveMessage(new Message
+        var dbMessage = await _unitOfWork.Messages.SaveMessage(new Message
         {
             MessageId = Guid.NewGuid().ToString(),
             UserId = command.UserId,
@@ -58,7 +56,8 @@ public class SaveMessageCommandHandler :
             ImageUrl = ""
         });
 
-        var user = await _userRepository.GetUserById(dbMessage.UserId);
+        var user = await _unitOfWork.Users
+            .GetUserById(dbMessage.UserId);
 
         return _mapper.Map<MessageResponse>((dbMessage, user));
     }

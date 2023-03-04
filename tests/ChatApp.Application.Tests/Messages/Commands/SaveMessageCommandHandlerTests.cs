@@ -1,5 +1,5 @@
-using ChatApp.Application.Common.Interfaces.Persistence;
 using ChatApp.Application.Messages.Commands.SaveMessage;
+using ChatApp.Application.Common.Interfaces;
 using ChatApp.Application.Tests.Config;
 using ChatApp.Domain.Common.Errors;
 using ChatApp.Domain.Entities;
@@ -14,8 +14,7 @@ namespace ChatApp.Application.Tests.Messages.Commands;
 public class SaveMessageCommandHandlerTests
 {
     private readonly IValidator<SaveMessageCommand> _commandValidator = new SaveMessageCommandValidator();
-    private readonly Mock<IMessageRepository> _messageRepositoryMock = new();
-    private readonly Mock<IUserRepository> _userRepositoryMock = new();
+    private readonly Mock<IUnitOfWork> _unitOfWorkMock = new();
     private readonly IMapper _mapper = MapsterConfigForTesting.GetMapper();
     private readonly SaveMessageCommandHandler _sut;
     private readonly Fixture _fixture;
@@ -24,9 +23,8 @@ public class SaveMessageCommandHandlerTests
     {   
         _fixture = new Fixture();
         _sut = new SaveMessageCommandHandler(
-            _userRepositoryMock.Object, 
+            _unitOfWorkMock.Object,
             _commandValidator,
-            _messageRepositoryMock.Object,
             _mapper);
     }
 
@@ -48,16 +46,19 @@ public class SaveMessageCommandHandlerTests
             .With(m => m.UserId, command.UserId)
             .Create();
 
-        _userRepositoryMock
-            .Setup(x => x.UserExists(user.UserId))
+        _unitOfWorkMock
+            .Setup(u => 
+                u.Users.UserExists(user.UserId))
             .ReturnsAsync(true);
 
-        _messageRepositoryMock
-            .Setup(x => x.SaveMessage(It.IsAny<Message>()))
+        _unitOfWorkMock
+            .Setup(u => 
+                u.Messages.SaveMessage(It.IsAny<Message>()))
             .ReturnsAsync(message);
         
-        _userRepositoryMock
-            .Setup(x => x.GetUserById(user.UserId))
+        _unitOfWorkMock
+            .Setup(u => 
+                u.Users.GetUserById(user.UserId))
             .ReturnsAsync(user);
         
         //Act
@@ -74,8 +75,9 @@ public class SaveMessageCommandHandlerTests
         //Arrange
         var command = _fixture.Create<SaveMessageCommand>();
 
-        _userRepositoryMock
-            .Setup(x => x.UserExists(command.UserId))
+        _unitOfWorkMock
+            .Setup(u => 
+                u.Users.UserExists(command.UserId))
             .ReturnsAsync(false);
         
         //Act
@@ -96,8 +98,9 @@ public class SaveMessageCommandHandlerTests
             "",
             true);
 
-        _userRepositoryMock
-            .Setup(x => x.UserExists(command.UserId))
+        _unitOfWorkMock
+            .Setup(u => 
+                u.Users.UserExists(command.UserId))
             .ReturnsAsync(true);
 
         //Act

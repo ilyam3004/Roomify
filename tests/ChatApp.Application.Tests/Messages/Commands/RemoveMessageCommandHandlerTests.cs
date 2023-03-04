@@ -1,28 +1,23 @@
-using ChatApp.Application.Common.Interfaces.Persistence;
-using ChatApp.Application.Tests.Config;
+using ChatApp.Application.Messages.Commands.RemoveMessage;
+using ChatApp.Application.Common.Interfaces;
 using ChatApp.Domain.Common.Errors;
 using ChatApp.Domain.Entities;
-using MapsterMapper;
 using AutoFixture;
 using ErrorOr;
 using Moq;
-using ChatApp.Application.Messages.Commands.RemoveMessage;
 
 namespace ChatApp.Application.Tests.Messages.Commands;
 
 public class RemoveMessageCommandHandlerTests
 {
-    private readonly Mock<IMessageRepository> _messageRepositoryMock = new();
-    private readonly Mock<IUserRepository> _userRepositoryMock = new();
-    private readonly IMapper _mapper = MapsterConfigForTesting.GetMapper();
+    private readonly Mock<IUnitOfWork> _unitOfWorkMock = new();
     private readonly Fixture _fixture;
     private readonly RemoveMessageCommandHandler _sut;
 
     public RemoveMessageCommandHandlerTests()
     {
         _sut = new RemoveMessageCommandHandler(
-            _messageRepositoryMock.Object,
-            _userRepositoryMock.Object);
+            _unitOfWorkMock.Object);
         _fixture = new Fixture();
     }
 
@@ -32,8 +27,9 @@ public class RemoveMessageCommandHandlerTests
         //Arrange
         var user = _fixture.Create<User>();
 
-        _userRepositoryMock
-            .Setup(x => x.GetUserByConnectionIdOrNull(user.ConnectionId))
+        _unitOfWorkMock
+            .Setup(u => 
+                u.Users.GetUserByConnectionIdOrNull(user.ConnectionId))
             .ReturnsAsync(user);
 
         var message = _fixture.Build<Message>()
@@ -41,8 +37,9 @@ public class RemoveMessageCommandHandlerTests
             .With(m => m.RoomId, user.RoomId)
             .Create();
 
-        _messageRepositoryMock
-            .Setup(x => x.GetMessageByIdOrNullIfNotExists(message.MessageId))
+        _unitOfWorkMock
+            .Setup(u => 
+                u.Messages.GetMessageByIdOrNullIfNotExists(message.MessageId))
             .ReturnsAsync(message);
 
         var command = new RemoveMessageCommand(
@@ -62,16 +59,18 @@ public class RemoveMessageCommandHandlerTests
         //Arrange
         var user = _fixture.Create<User>();
 
-        _userRepositoryMock
-            .Setup(x => x.GetUserByConnectionIdOrNull(user.ConnectionId))
+        _unitOfWorkMock
+            .Setup(u => 
+                u.Users.GetUserByConnectionIdOrNull(user.ConnectionId))
             .ReturnsAsync(user);
 
         var message = _fixture.Build<Message>()
             .With(m => m.RoomId, user.RoomId)
             .Create();
 
-        _messageRepositoryMock
-            .Setup(x => x.GetMessageByIdOrNullIfNotExists(message.MessageId))
+        _unitOfWorkMock
+            .Setup(u => 
+                u.Messages.GetMessageByIdOrNullIfNotExists(message.MessageId))
             .ReturnsAsync(message);
 
         var command = new RemoveMessageCommand(message.MessageId, user.ConnectionId);
@@ -89,8 +88,9 @@ public class RemoveMessageCommandHandlerTests
         //Arrange
         var command = _fixture.Create<RemoveMessageCommand>();
 
-        _messageRepositoryMock
-            .Setup(x => x.GetMessageByIdOrNullIfNotExists(command.MessageId))
+        _unitOfWorkMock
+            .Setup(u => 
+                u.Messages.GetMessageByIdOrNullIfNotExists(command.MessageId))
             .ReturnsAsync(() => null);
 
         //Act
@@ -110,12 +110,14 @@ public class RemoveMessageCommandHandlerTests
 
         var command = new RemoveMessageCommand(message.MessageId, connectionId);
 
-        _messageRepositoryMock
-            .Setup(x => x.GetMessageByIdOrNullIfNotExists(message.MessageId))
+        _unitOfWorkMock
+            .Setup(u => 
+                u.Messages.GetMessageByIdOrNullIfNotExists(message.MessageId))
             .ReturnsAsync(message);
 
-        _userRepositoryMock
-            .Setup(x => x.GetUserByConnectionIdOrNull(command.ConnectionId))
+        _unitOfWorkMock
+            .Setup(u => 
+                u.Users.GetUserByConnectionIdOrNull(command.ConnectionId))
             .ReturnsAsync(() => null);
         
         //Act

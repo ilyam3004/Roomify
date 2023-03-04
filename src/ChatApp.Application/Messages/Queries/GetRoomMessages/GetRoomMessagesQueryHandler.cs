@@ -1,4 +1,4 @@
-using ChatApp.Application.Common.Interfaces.Persistence;
+using ChatApp.Application.Common.Interfaces;
 using ChatApp.Application.Models.Responses;
 using ChatApp.Domain.Entities;
 using MapsterMapper;
@@ -9,17 +9,14 @@ namespace ChatApp.Application.Messages.Queries.GetRoomMessages;
 public class GetRoomMessagesQueryHandler : 
     IRequestHandler<GetRoomMessagesQuery, List<MessageResponse>>
 {
-    private readonly IMessageRepository _messageRepository;
-    private readonly IUserRepository _userRepository;
+    private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
 
     public GetRoomMessagesQueryHandler(
-        IMessageRepository messageRepository,
-        IUserRepository userRepository,
+        IUnitOfWork unitOfWork,
         IMapper mapper)
     {
-        _messageRepository = messageRepository;
-        _userRepository = userRepository;
+        _unitOfWork = unitOfWork;
         _mapper = mapper;
     }
 
@@ -27,7 +24,8 @@ public class GetRoomMessagesQueryHandler :
         GetRoomMessagesQuery query, 
         CancellationToken cancellationToken)
     {
-        List<Message> dbMessages = await _messageRepository.GetAllRoomMessages(query.RoomId);   
+        List<Message> dbMessages = await _unitOfWork.Messages
+            .GetAllRoomMessages(query.RoomId);   
         
         return await MapRoomMessagesResponseResult(dbMessages);
     }
@@ -38,7 +36,8 @@ public class GetRoomMessagesQueryHandler :
         List<MessageResponse> messages = new();
         foreach (var dbMessage in dbMessages)
         {
-            var user = await _userRepository.GetUserById(dbMessage.UserId);
+            var user = await _unitOfWork.Users
+                .GetUserById(dbMessage.UserId);
             messages.Add(_mapper.Map<MessageResponse>((dbMessage, user)));
         }
 

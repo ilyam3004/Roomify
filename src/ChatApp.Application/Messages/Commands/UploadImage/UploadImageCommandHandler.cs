@@ -1,4 +1,4 @@
-using ChatApp.Application.Common.Interfaces.Persistence;
+using ChatApp.Application.Common.Interfaces;
 using ChatApp.Domain.Common.Errors;
 using CloudinaryDotNet.Actions;
 using ErrorOr;
@@ -9,12 +9,11 @@ namespace ChatApp.Application.Messages.Commands.UploadImage;
 public class UploadImageCommandHandler : 
     IRequestHandler<UploadImageCommand, ErrorOr<ImageUploadResult>>
 {
-    private readonly IMessageRepository _messageRepository;
+    private readonly IUnitOfWork _unitOfWork;
 
-    public UploadImageCommandHandler(
-        IMessageRepository messageRepository)
+    public UploadImageCommandHandler(IUnitOfWork unitOfWork)
     {
-        _messageRepository = messageRepository;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<ErrorOr<ImageUploadResult>> Handle(
@@ -26,7 +25,8 @@ public class UploadImageCommandHandler :
             return Errors.Message.ImageFileIsCorrupted;
         }
 
-        var uploadResult = await _messageRepository.UploadImageToCloudinary(command.image, command.isAvatar);
+        var uploadResult = await _unitOfWork.Messages
+            .UploadImageToCloudinary(command.image, command.isAvatar);
 
         return uploadResult is null ? Errors.Message.CantUploadImage : uploadResult;
     }

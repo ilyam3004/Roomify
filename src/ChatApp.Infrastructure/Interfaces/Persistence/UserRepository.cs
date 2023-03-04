@@ -3,7 +3,7 @@ using ChatApp.Infrastructure.Config;
 using ChatApp.Domain.Entities;
 using Dapper;
 
-namespace ChatApp.Infrastructure.Persistence;
+namespace ChatApp.Infrastructure.Interfaces.Persistence;
 
 public class UserRepository : IUserRepository
 {

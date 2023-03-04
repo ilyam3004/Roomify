@@ -1,34 +1,32 @@
-using ChatApp.Application.Common.Interfaces.Persistence;
+using ChatApp.Application.Common.Interfaces;
 using ChatApp.Domain.Common.Errors;
 using ErrorOr;
 using MediatR;
 
 namespace ChatApp.Application.Messages.Commands.RemoveMessage;
 
-public class RemoveMessageCommandHandler 
-    : IRequestHandler<RemoveMessageCommand, ErrorOr<Deleted>>
+public class RemoveMessageCommandHandler : IRequestHandler<RemoveMessageCommand, ErrorOr<Deleted>>
 {
-    private readonly IMessageRepository _messageRepository;
-    private readonly IUserRepository _userRepository;
-    public RemoveMessageCommandHandler(
-        IMessageRepository messageRepository, 
-        IUserRepository userRepository)
+    private readonly IUnitOfWork _unitOfWork;
+
+    public RemoveMessageCommandHandler(IUnitOfWork unitOfWork)
     {
-        _messageRepository = messageRepository;
-        _userRepository = userRepository;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<ErrorOr<Deleted>> Handle(
-        RemoveMessageCommand command, 
+        RemoveMessageCommand command,
         CancellationToken cancellationToken)
     {
-        var message = await _messageRepository.GetMessageByIdOrNullIfNotExists(command.MessageId);
+        var message = await _unitOfWork
+            .Messages.GetMessageByIdOrNullIfNotExists(command.MessageId);
         if (message is null)
         {
             return Errors.Message.MessageNotFound;
         }
 
-        var user = await _userRepository.GetUserByConnectionIdOrNull(command.ConnectionId);
+        var user = await _unitOfWork
+            .Users.GetUserByConnectionIdOrNull(command.ConnectionId);
         if (user is null)
         {
             return Errors.User.UserNotFound;
@@ -36,9 +34,8 @@ public class RemoveMessageCommandHandler
 
         if (user.UserId == message.UserId)
         {
-            await _messageRepository.RemoveMessageById(message.MessageId);
+            await _unitOfWork.Messages.RemoveMessageById(message.MessageId);
             return Result.Deleted;
-            
         }
 
         return Errors.Message.MessageIsNotRemoved;

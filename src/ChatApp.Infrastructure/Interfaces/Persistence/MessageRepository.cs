@@ -7,7 +7,7 @@ using ChatApp.Domain.Entities;
 using CloudinaryDotNet;
 using Dapper;
 
-namespace ChatApp.Infrastructure.Persistence;
+namespace ChatApp.Infrastructure.Interfaces.Persistence;
 
 public class MessageRepository : IMessageRepository
 {
