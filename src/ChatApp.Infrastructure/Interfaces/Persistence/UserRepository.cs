@@ -1,19 +1,29 @@
 using ChatApp.Application.Common.Interfaces.Persistence;
-using ChatApp.Infrastructure.Config;
 using ChatApp.Domain.Entities;
+using System.Data;
 using Dapper;
+using Microsoft.Extensions.Options;
+using ChatApp.Infrastructure.Config;
 
 namespace ChatApp.Infrastructure.Interfaces.Persistence;
 
 public class UserRepository : IUserRepository
 {
-    private readonly AppDbContext _dbContext;
+    private readonly IDbConnection  _connection;
+    private readonly IDbTransaction _transaction;
+    
     private readonly IMessageRepository _messageRepository;
 
-    public UserRepository(AppDbContext dbContext, IMessageRepository messageRepository)
+    public UserRepository(
+        IDbTransaction transaction, 
+        IDbConnection connection)
     {
-        _dbContext = dbContext;
-        _messageRepository = messageRepository;
+        _messageRepository = new MessageRepository(
+            new IOptions<CloudinarySettings>(), 
+            connection, 
+            transaction);
+        _transaction = transaction;
+        _connection = connection;
     }
 
     public async Task<User> AddUser(User user)
@@ -31,8 +41,8 @@ public class UserRepository : IUserRepository
     {
         var query = "SELECT * FROM [ChatUser] WHERE UserId = @userId";
 
-        using var connection = _dbContext.CreateConnection();
-        var user = await connection.QueryFirstOrDefaultAsync<User>(query, new {userId});
+        var user = await _connection
+            .QueryFirstOrDefaultAsync<User>(query, new {userId}, _transaction);
 
         return user;
     }
