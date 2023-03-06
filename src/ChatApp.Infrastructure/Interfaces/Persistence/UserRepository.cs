@@ -2,26 +2,18 @@ using ChatApp.Application.Common.Interfaces.Persistence;
 using ChatApp.Domain.Entities;
 using System.Data;
 using Dapper;
-using Microsoft.Extensions.Options;
-using ChatApp.Infrastructure.Config;
 
 namespace ChatApp.Infrastructure.Interfaces.Persistence;
 
 public class UserRepository : IUserRepository
 {
     private readonly IDbConnection  _connection;
-    private readonly IDbTransaction _transaction;
-    
-    private readonly IMessageRepository _messageRepository;
+    private readonly IDbTransaction? _transaction;
 
     public UserRepository(
-        IDbTransaction transaction, 
-        IDbConnection connection)
+        IDbConnection connection, 
+        IDbTransaction transaction)
     {
-        _messageRepository = new MessageRepository(
-            new IOptions<CloudinarySettings>(), 
-            connection, 
-            transaction);
         _transaction = transaction;
         _connection = connection;
     }
@@ -31,8 +23,7 @@ public class UserRepository : IUserRepository
         var query = "INSERT INTO [ChatUser] (UserId, Username, ConnectionId, RoomId, HasLeft, Avatar) " +
                     "VALUES (@UserId, @Username, @ConnectionId, @RoomId, @HasLeft, @Avatar)";
 
-        using var connection = _dbContext.CreateConnection();
-        await connection.ExecuteAsync(query, user);
+        await _connection.ExecuteAsync(query, user, _transaction);
 
         return user;
     }
@@ -62,8 +53,7 @@ public class UserRepository : IUserRepository
             RoomName = roomName
         };
 
-        using var connection = _dbContext.CreateConnection();
-        await connection.ExecuteAsync(query, room);
+        await _connection.ExecuteAsync(query, room, _transaction);
 
         return room;
     }
@@ -72,8 +62,8 @@ public class UserRepository : IUserRepository
     {
         var query = "SELECT * FROM [ChatUser] WHERE RoomId = @RoomId AND HasLeft = 'FALSE'";
 
-        using var connection = _dbContext.CreateConnection();
-        IEnumerable<User> users = await connection.QueryAsync<User>(query, new {RoomId = roomId});
+        IEnumerable<User> users = await _connection
+            .QueryAsync<User>(query, new {RoomId = roomId}, _transaction);
 
         return users.ToList();
     }
@@ -82,8 +72,8 @@ public class UserRepository : IUserRepository
     {
         var query = "SELECT * FROM Room WHERE RoomId = @RoomId";
 
-        using var connection = _dbContext.CreateConnection();
-        Room room = await connection.QueryFirstOrDefaultAsync<Room>(query, new {roomId});
+        Room room = await _connection
+            .QueryFirstOrDefaultAsync<Room>(query, new {roomId}, _transaction);
         return room;
     }
 
@@ -91,10 +81,9 @@ public class UserRepository : IUserRepository
     {
         var query = "SELECT COUNT(*) FROM [ChatUser] WHERE Username = @Username AND RoomId = @RoomId AND HasLeft = 'FALSE'";
 
-        using var connection = _dbContext.CreateConnection();
-        int count = await connection
+        int count = await _connection
             .QueryFirstOrDefaultAsync<int>(query,
-                new {Username = username, RoomId = roomId});
+                new {Username = username, RoomId = roomId}, _transaction);
 
         return count != 0;
     }
@@ -103,8 +92,9 @@ public class UserRepository : IUserRepository
     {
         string query = "SELECT * FROM [ChatUser] WHERE ConnectionId = @ConnectionId";
 
-        using var connection = _dbContext.CreateConnection();
-        User? user = await connection.QueryFirstOrDefaultAsync<User>(query, new {ConnectionId = connectionId});
+        User? user = await _connection
+            .QueryFirstOrDefaultAsync<User>(query, 
+                new {ConnectionId = connectionId}, _transaction);
         return user;
     }
 
@@ -113,9 +103,8 @@ public class UserRepository : IUserRepository
     {
         var query = "SELECT COUNT(*) FROM [ChatUser] WHERE UserId = @UserId";
 
-        using var connection = _dbContext.CreateConnection();
-        int count = await connection.QueryFirstOrDefaultAsync<int>(query,
-            new { UserId = userId });
+        int count = await _connection.QueryFirstOrDefaultAsync<int>(query,
+            new { UserId = userId }, _transaction);
 
         return count != 0;
     }
@@ -124,35 +113,30 @@ public class UserRepository : IUserRepository
     {
         string query = "SELECT COUNT(*) FROM Room WHERE RoomId = @RoomId";
 
-        using var connection = _dbContext.CreateConnection();
-        int count = await connection.QueryFirstOrDefaultAsync<int>(query,
-            new {RoomId = roomId});
+        int count = await _connection.QueryFirstOrDefaultAsync<int>(query,
+            new {RoomId = roomId}, _transaction);
 
         return count != 0;
     }
 
-    private async Task<Room> GetRoomByRoomName(string roomName)
+    public async Task UpdateUserStatusToHasLeft(string userId)
     {
-        var query = "SELECT * FROM Room WHERE RoomName = @RoomName";
+        string query = "UPDATE [ChatUser] SET HasLeft = 'TRUE' WHERE UserId = @UserId";
 
-        using var connection = _dbContext.CreateConnection();
-        Room room = await connection.QueryFirstOrDefaultAsync<Room>(
-            query, new {RoomName = roomName});
-
-        return room;
+        await _connection.ExecuteAsync(query, 
+            new {UserId = userId}, _transaction);
     }
 
     public async Task<bool> RemoveRoomDataIfEmpty(string roomId, string userId)
     {
         string query = "SELECT COUNT(*) FROM [ChatUser] WHERE RoomId = @RoomId AND HasLeft = 'FALSE'";
 
-        using var connection = _dbContext.CreateConnection();
-        int count = await connection.QueryFirstOrDefaultAsync<int>(query,
-            new {RoomId = roomId});
+        int count = await _connection.QueryFirstOrDefaultAsync<int>(query,
+            new {RoomId = roomId}, _transaction);
 
         if (count == 1)
         {
-            await _messageRepository.RemoveAllMessagesFromRoom(roomId);
+            await RemoveAllMessagesFromRoom(roomId);
             await RemoveAllUsersFromRoom(roomId);
             await RemoveRoom(roomId);
             return true;
@@ -166,33 +150,40 @@ public class UserRepository : IUserRepository
     {
         var query = "DELETE FROM [ChatUser] WHERE RoomId = @RoomId";
 
-        var connection = _dbContext.CreateConnection();
-        await connection.ExecuteAsync(query, new { RoomId = roomId });
+        await _connection.ExecuteAsync(query, new { RoomId = roomId }, _transaction);
     }
-
-    public async Task UpdateUserStatusToHasLeft(string userId)
+    
+    public async Task RemoveAllMessagesFromRoom(string roomId)
     {
-        string query = "UPDATE [ChatUser] SET HasLeft = 'TRUE' WHERE UserId = @UserId";
+        string query = "DELETE FROM Message WHERE RoomId = @RoomId";
 
-        using var connection = _dbContext.CreateConnection();
-        await connection.ExecuteAsync(query, new {UserId = userId});
+        await _connection.ExecuteAsync(query, new {RoomId = roomId}, _transaction);
     }
 
     private async Task RemoveRoom(string roomId)
     {
         string query = "DELETE FROM Room WHERE RoomId = @RoomId";
 
-        using var connection = _dbContext.CreateConnection();
-        await connection.ExecuteAsync(query, new {RoomId = roomId});
+        await _connection.ExecuteAsync(query, new {RoomId = roomId}, _transaction);
+    }
+
+    private async Task<Room> GetRoomByRoomName(string roomName)
+    {
+        var query = "SELECT * FROM Room WHERE RoomName = @RoomName";
+
+        Room room = await _connection.QueryFirstOrDefaultAsync<Room>(
+            query, new {RoomName = roomName}, _transaction);
+
+        return room;
     }
 
     private async Task<bool> RoomExistsByRoomName(string roomName)
     {
         var query = "SELECT COUNT(*) FROM Room WHERE RoomName = @RoomName";
 
-        using var connection = _dbContext.CreateConnection();
-        int count = await connection
-            .QueryFirstOrDefaultAsync<int>(query, new {RoomName = roomName});
+        int count = await _connection
+            .QueryFirstOrDefaultAsync<int>(query, 
+                new {RoomName = roomName}, _transaction);
         
         return count != 0;
     }

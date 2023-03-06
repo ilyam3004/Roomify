@@ -81,13 +81,6 @@ public class MessageRepository : IMessageRepository
         await _connection.ExecuteAsync(query, new {MessageId = messageId}, _transaction);
     }
 
-    public async Task RemoveAllMessagesFromRoom(string roomId)
-    {
-        string query = "DELETE FROM Message WHERE RoomId = @RoomId";
-
-        await _connection.ExecuteAsync(query, new {RoomId = roomId}, _transaction);
-    }
-
     public async Task<List<Message>> GetAllRoomMessages(string roomId)
     {
         string query = "SELECT * FROM Message WHERE RoomId = @RoomId";
