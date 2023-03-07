@@ -1,5 +1,5 @@
-using ChatApp.Application.Common.Interfaces.Persistence;
 using ChatApp.Application.Users.Commands.JoinRoom;
+using ChatApp.Application.Common.Interfaces;
 using ChatApp.Application.Tests.Config;
 using ChatApp.Domain.Common.Errors;
 using ChatApp.Domain.Entities;
@@ -14,7 +14,7 @@ namespace ChatApp.Application.Tests.Users.Commands;
 public class JoinUserCommandHandlerTests
 {
     private readonly IValidator<JoinRoomCommand> _commandValidator = new JoinRoomCommandValidator();
-    private readonly Mock<IUserRepository> _userRepositoryMock = new();
+    private readonly Mock<IUnitOfWork> _unitOfWorkMock = new();
     private readonly IMapper _mapper = MapsterConfigForTesting.GetMapper();
     private readonly JoinUserCommandHandler _sut;
     private readonly Fixture _fixture;
@@ -23,7 +23,7 @@ public class JoinUserCommandHandlerTests
     {
         _fixture = new Fixture();
         _sut = new JoinUserCommandHandler(
-            _userRepositoryMock.Object, 
+            _unitOfWorkMock.Object, 
             _mapper,
             _commandValidator);
     }
@@ -41,17 +41,19 @@ public class JoinUserCommandHandlerTests
             .With(r => r.RoomName, command.RoomName)
             .Create();
 
-        _userRepositoryMock
-            .Setup(x => x.CreateRoomIfNotExists(command.RoomName))
+        _unitOfWorkMock
+            .Setup(u => 
+                u.Users.CreateRoomIfNotExists(command.RoomName))
             .ReturnsAsync(room);
 
-        _userRepositoryMock
-            .Setup(x => x.UserExists(command.Username, room.RoomId))
+        _unitOfWorkMock
+            .Setup(u => 
+                u.Users.UserExists(command.Username, room.RoomId))
             .ReturnsAsync(false);
 
-        _userRepositoryMock
-            .Setup(x => x
-                .AddUser(It.IsAny<User>()))
+        _unitOfWorkMock
+            .Setup(u => 
+                u.Users.AddUser(It.IsAny<User>()))
             .ReturnsAsync((User user) => user);
 
         // Act
@@ -91,12 +93,14 @@ public class JoinUserCommandHandlerTests
             .With(r => r.RoomName, command.RoomName)
             .Create();
 
-        _userRepositoryMock
-            .Setup(x => x.CreateRoomIfNotExists(command.RoomName))
+        _unitOfWorkMock
+            .Setup(u => 
+                u.Users.CreateRoomIfNotExists(command.RoomName))
             .ReturnsAsync(room);
 
-        _userRepositoryMock
-            .Setup(x => x.UserExists(command.Username, room.RoomId))
+        _unitOfWorkMock
+            .Setup(u => 
+                u.Users.UserExists(command.Username, room.RoomId))
             .ReturnsAsync(true);
 
         // Act

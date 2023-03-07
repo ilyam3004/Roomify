@@ -1,6 +1,6 @@
-using ChatApp.Application.Common.Interfaces.Persistence;
-using ChatApp.Application.Tests.Config;
 using ChatApp.Application.Users.Queries.GetUserList;
+using ChatApp.Application.Common.Interfaces;
+using ChatApp.Application.Tests.Config;
 using ChatApp.Domain.Entities;
 using MapsterMapper;
 using AutoFixture;
@@ -11,7 +11,7 @@ namespace ChatApp.Application.Tests.Users.Queries;
 public class GetUserListQueryHandlerTests
 {
     private readonly IMapper _mapper = MapsterConfigForTesting.GetMapper();
-    private readonly Mock<IUserRepository> _userRepositoryMock = new();
+    private readonly Mock<IUnitOfWork> _unitOfWorkMock = new();
     private readonly GetUserListQueryHandler _sut;
     private readonly Fixture _fixture;
     
@@ -19,7 +19,7 @@ public class GetUserListQueryHandlerTests
     {
         _fixture = new Fixture();
         _sut = new GetUserListQueryHandler(
-            _userRepositoryMock.Object,
+            _unitOfWorkMock.Object,
             _mapper);
     }
 
@@ -29,8 +29,9 @@ public class GetUserListQueryHandlerTests
         // Arrange
         var room = _fixture.Create<Room>();
 
-        _userRepositoryMock
-            .Setup(x => x.GetRoomById(room.RoomId))
+        _unitOfWorkMock
+            .Setup(u => 
+                u.Users.GetRoomById(room.RoomId))
             .ReturnsAsync(room);
 
         var userList = _fixture.Build<User>()
@@ -38,8 +39,9 @@ public class GetUserListQueryHandlerTests
             .CreateMany(2)
             .ToList();
 
-        _userRepositoryMock
-            .Setup(x => x.GetRoomUsers(room.RoomId))
+        _unitOfWorkMock
+            .Setup(u => 
+                u.Users.GetRoomUsers(room.RoomId))
             .ReturnsAsync(userList);
 
         var query = new GetUserListQuery(room.RoomId);

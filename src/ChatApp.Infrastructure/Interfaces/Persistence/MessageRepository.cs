@@ -5,25 +5,28 @@ using Microsoft.AspNetCore.Http;
 using CloudinaryDotNet.Actions;
 using ChatApp.Domain.Entities;
 using CloudinaryDotNet;
+using System.Data;
 using Dapper;
 
-namespace ChatApp.Infrastructure.Persistence;
+namespace ChatApp.Infrastructure.Interfaces.Persistence;
 
 public class MessageRepository : IMessageRepository
 {
-    private readonly AppDbContext _dbContext;
+    private readonly IDbConnection _connection;
     private readonly Cloudinary _cloudinary;
 
-    public MessageRepository(IOptions<CloudinarySettings> config, AppDbContext dbContext)
+    public MessageRepository(
+        IDbConnection connection,
+        IOptions<CloudinarySettings> config)
     {
         var account = new Account(
-            config.Value.CloudName,
-            config.Value.ApiKey,
-            config.Value.ApiSecret);
+             config.Value.CloudName,
+             config.Value.ApiKey,
+             config.Value.ApiSecret);
 
         _cloudinary = new Cloudinary(account);
 
-        _dbContext = dbContext;
+        _connection = connection;
     }
 
     public async Task<ImageUploadResult?> UploadImageToCloudinary(IFormFile image, bool isAvatar)
@@ -63,8 +66,7 @@ public class MessageRepository : IMessageRepository
         string query = "INSERT INTO Message (MessageId, UserId, RoomId, Text, Date, FromUser, isImage, ImageUrl) " +
                        "VALUES (@MessageId, @UserId, @RoomId, @Text, @Date, @FromUser, @isImage, @ImageUrl)";
 
-        using var connection = _dbContext.CreateConnection();
-        await connection.ExecuteAsync(query, message);
+        await _connection.ExecuteAsync(query, message);
 
         return message;
     }
@@ -73,24 +75,14 @@ public class MessageRepository : IMessageRepository
     {
         string query = "DELETE FROM Message WHERE MessageId = @MessageId";
 
-        using var connection = _dbContext.CreateConnection();
-        await connection.ExecuteAsync(query, new {MessageId = messageId});
-    }
-
-    public async Task RemoveAllMessagesFromRoom(string roomId)
-    {
-        string query = "DELETE FROM Message WHERE RoomId = @RoomId";
-
-        using var connection = _dbContext.CreateConnection();
-        await connection.ExecuteAsync(query, new {RoomId = roomId});
+        await _connection.ExecuteAsync(query, new {MessageId = messageId});
     }
 
     public async Task<List<Message>> GetAllRoomMessages(string roomId)
     {
         string query = "SELECT * FROM Message WHERE RoomId = @RoomId";
 
-        using var connection = _dbContext.CreateConnection();
-        IEnumerable<Message> messages = await connection
+        IEnumerable<Message> messages = await _connection
             .QueryAsync<Message>(query, new {RoomId = roomId});
 
         return messages.ToList();
@@ -100,8 +92,8 @@ public class MessageRepository : IMessageRepository
     {
         string query = "SELECT * FROM Message WHERE MessageId = @MessageId";
 
-        using var connection = _dbContext.CreateConnection();
-        var message = await connection.QueryFirstOrDefaultAsync<Message>(query, new {MessageId = messageId});
+        var message = await _connection.QueryFirstOrDefaultAsync<Message>(
+            query, new {MessageId = messageId});
 
         return message;
     }

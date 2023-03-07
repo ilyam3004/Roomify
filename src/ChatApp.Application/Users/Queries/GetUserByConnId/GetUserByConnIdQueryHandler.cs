@@ -1,4 +1,4 @@
-using ChatApp.Application.Common.Interfaces.Persistence;
+using ChatApp.Application.Common.Interfaces;
 using ChatApp.Application.Models.Responses;
 using ChatApp.Domain.Common.Errors;
 using ChatApp.Domain.Entities;
@@ -11,14 +11,14 @@ namespace ChatApp.Application.Users.Queries.GetUserByConnId;
 public class GetUserByConnIdQueryHandler : 
     IRequestHandler<GetUserByConnIdQuery, ErrorOr<UserResponse>>
 {
-    private readonly IUserRepository _userRepository;
+    private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
 
     public GetUserByConnIdQueryHandler(
-        IUserRepository userRepository, 
+        IUnitOfWork unitOfWork,
         IMapper mapper)
     {
-        _userRepository = userRepository;
+        _unitOfWork = unitOfWork;
         _mapper = mapper;
     }
 
@@ -26,7 +26,7 @@ public class GetUserByConnIdQueryHandler :
         GetUserByConnIdQuery query, 
         CancellationToken cancellationToken)
     {
-        User? user = await _userRepository
+        User? user = await _unitOfWork.Users
             .GetUserByConnectionIdOrNull(query.ConnectionId);
 
         if (user is null)
@@ -34,7 +34,8 @@ public class GetUserByConnIdQueryHandler :
             return Errors.User.UserNotFound;
         }
 
-        Room room = await _userRepository.GetRoomById(user.RoomId);
+        Room room = await _unitOfWork.Users
+            .GetRoomById(user.RoomId);
 
         return _mapper.Map<UserResponse>((user, room));
     }

@@ -1,18 +1,18 @@
-using ChatApp.Application.Common.Interfaces.Persistence;
 using ChatApp.Application.Users.Commands.LeaveRoom;
+using ChatApp.Application.Common.Interfaces;
 using ChatApp.Application.Tests.Config;
+using ChatApp.Domain.Common.Errors;
 using ChatApp.Domain.Entities;
 using MapsterMapper;
 using AutoFixture;
 using Moq;
-using ChatApp.Domain.Common.Errors;
 
 namespace ChatApp.Application.Tests.Users.Commands;
 
 public class LeaveRoomCommandHandlerTests
 {
     private readonly IMapper _mapper = MapsterConfigForTesting.GetMapper();
-    private readonly Mock<IUserRepository> _userRepositoryMock = new();
+    private readonly Mock<IUnitOfWork> _unitOfWorkMock = new();
     private readonly LeaveRoomCommandHandler _sut;
     private readonly Fixture _fixture;
 
@@ -20,7 +20,7 @@ public class LeaveRoomCommandHandlerTests
     {
         _fixture = new Fixture();
         _sut = new LeaveRoomCommandHandler(
-            _userRepositoryMock.Object,
+            _unitOfWorkMock.Object,
             _mapper);
     }
 
@@ -34,12 +34,14 @@ public class LeaveRoomCommandHandlerTests
             .With(r => r.RoomId, user.RoomId)
             .Create();
 
-        _userRepositoryMock
-            .Setup(x => x.GetUserByConnectionIdOrNull(user.ConnectionId))
+        _unitOfWorkMock
+            .Setup(u => 
+                u.Users.GetUserByConnectionIdOrNull(user.ConnectionId))
             .ReturnsAsync(user);
 
-        _userRepositoryMock
-            .Setup(x => x.GetRoomById(room.RoomId))
+        _unitOfWorkMock
+            .Setup(x => 
+                x.Users.GetRoomById(room.RoomId))
             .ReturnsAsync(room);
 
         var command = new LeaveRoomCommand(user.ConnectionId);
@@ -59,12 +61,14 @@ public class LeaveRoomCommandHandlerTests
         var connectionId = Guid.NewGuid().ToString();
         var room = _fixture.Create<Room>();
 
-        _userRepositoryMock
-            .Setup(x => x.GetUserByConnectionIdOrNull(connectionId))
+        _unitOfWorkMock
+            .Setup(u => 
+                u.Users.GetUserByConnectionIdOrNull(connectionId))
             .ReturnsAsync(() => null);
 
-        _userRepositoryMock
-            .Setup(x => x.GetRoomById(room.RoomId))
+        _unitOfWorkMock
+            .Setup(u => 
+                u.Users.GetRoomById(room.RoomId))
             .ReturnsAsync(room);
 
         var command = new LeaveRoomCommand(Guid.NewGuid().ToString());
@@ -86,16 +90,19 @@ public class LeaveRoomCommandHandlerTests
             .With(r => r.RoomId, user.RoomId)
             .Create();
 
-        _userRepositoryMock
-            .Setup(u => u.GetRoomById(user.RoomId))
+        _unitOfWorkMock
+            .Setup(u => 
+                u.Users.GetRoomById(user.RoomId))
             .ReturnsAsync(room);
 
-        _userRepositoryMock
-            .Setup(x => x.GetUserByConnectionIdOrNull(user.ConnectionId))
+        _unitOfWorkMock
+            .Setup(u => 
+                u.Users.GetUserByConnectionIdOrNull(user.ConnectionId))
             .ReturnsAsync(user);
 
-        _userRepositoryMock
-            .Setup(x => x.RemoveRoomDataIfEmpty(user.RoomId, user.UserId))
+        _unitOfWorkMock
+            .Setup(u => 
+                u.Users.RemoveRoomDataIfEmpty(user.RoomId, user.UserId))
             .ReturnsAsync(true);
         
         var command = new LeaveRoomCommand(user.ConnectionId);
