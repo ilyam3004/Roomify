@@ -1,5 +1,5 @@
-using ChatApp.Application.Common.Interfaces.Persistence;
 using ChatApp.Application.Messages.Commands.UploadImage;
+using ChatApp.Application.Common.Interfaces;
 using ChatApp.Domain.Common.Errors;
 using Microsoft.AspNetCore.Http;
 using CloudinaryDotNet.Actions;
@@ -9,12 +9,12 @@ namespace ChatApp.Application.Tests.Messages.Commands;
 
 public class UploadImageCommandHandlerTests 
 {
-    private readonly Mock<IMessageRepository> _messageRepositoryMock = new();
+    private readonly Mock<IUnitOfWork> _unitOfWorkMock = new();
     private readonly UploadImageCommandHandler _sut;
     
     public UploadImageCommandHandlerTests()
     {
-        _sut = new UploadImageCommandHandler(_messageRepositoryMock.Object);
+        _sut = new UploadImageCommandHandler(_unitOfWorkMock.Object);
     }
     
     [Fact]
@@ -40,8 +40,9 @@ public class UploadImageCommandHandlerTests
         };
         bool isAvatar = false;
 
-        _messageRepositoryMock
-            .Setup(m => m.UploadImageToCloudinary(image, isAvatar))
+        _unitOfWorkMock
+            .Setup(u => 
+                u.Messages.UploadImageToCloudinary(image, isAvatar))
             .ReturnsAsync(uploadResult);
 
         var command = new UploadImageCommand(image, isAvatar);
@@ -97,8 +98,9 @@ public class UploadImageCommandHandlerTests
 
         bool isAvatar = false;
         
-        _messageRepositoryMock
-            .Setup(m => m.UploadImageToCloudinary(image, isAvatar))
+        _unitOfWorkMock
+            .Setup(u => 
+                u.Messages.UploadImageToCloudinary(image, isAvatar))
             .ReturnsAsync(() => null);
 
         var command = new UploadImageCommand(image, isAvatar);

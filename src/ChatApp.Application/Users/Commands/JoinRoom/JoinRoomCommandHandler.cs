@@ -1,6 +1,6 @@
-using ChatApp.Application.Common.Interfaces.Persistence;
 using ChatApp.Application.Models.Responses;
 using ChatApp.Application.Common.Errors;
+using ChatApp.Application.Common.Interfaces;
 using ChatApp.Domain.Common.Errors;
 using ChatApp.Domain.Entities;
 using FluentValidation;
@@ -14,15 +14,15 @@ public class JoinUserCommandHandler :
     IRequestHandler<JoinRoomCommand, ErrorOr<UserResponse>>
 {
     private readonly IValidator<JoinRoomCommand> _commandValidator;
-    private readonly IUserRepository _userRepository;
+    private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
 
     public JoinUserCommandHandler(
-        IUserRepository userRepository, 
+        IUnitOfWork unitOfWork,
         IMapper mapper, 
         IValidator<JoinRoomCommand> commandValidator)
     {
-        _userRepository = userRepository;
+        _unitOfWork = unitOfWork;
         _mapper = mapper;
         _commandValidator = commandValidator;
     }
@@ -39,9 +39,11 @@ public class JoinUserCommandHandler :
             return ErrorConverter.ConvertValidationErrors(validateResult.Errors);
         } 
         
-        Room room = await _userRepository.CreateRoomIfNotExists(command.RoomName);
+        Room room = await _unitOfWork.Users
+            .CreateRoomIfNotExists(command.RoomName);
 
-        if (await _userRepository.UserExists(command.Username, room.RoomId))
+        if (await _unitOfWork.Users
+                .UserExists(command.Username, room.RoomId))
         {
             return Errors.User.DuplicateUsername;
         }
@@ -56,8 +58,7 @@ public class JoinUserCommandHandler :
             HasLeft = false
         };
 
-        var dbUser = await _userRepository
-            .AddUser(userToAdd);
+        var dbUser = await _unitOfWork.Users.AddUser(userToAdd);
     
         return _mapper.Map<UserResponse>((dbUser, room));
     }

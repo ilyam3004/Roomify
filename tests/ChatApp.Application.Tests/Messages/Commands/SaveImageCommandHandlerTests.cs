@@ -1,5 +1,5 @@
-using ChatApp.Application.Common.Interfaces.Persistence;
 using ChatApp.Application.Messages.Commands.SaveImage;
+using ChatApp.Application.Common.Interfaces;
 using ChatApp.Application.Tests.Config;
 using ChatApp.Domain.Common.Errors;
 using ChatApp.Domain.Entities;
@@ -14,8 +14,7 @@ namespace ChatApp.Application.Tests.Messages.Commands;
 public class SaveImageCommandHandlerTests
 {
     private readonly IValidator<SaveImageCommand> _commandValidator = new SaveImageCommandValidator();
-    private readonly Mock<IMessageRepository> _messageRepositoryMock = new();
-    private readonly Mock<IUserRepository> _userRepositoryMock = new();
+    private readonly Mock<IUnitOfWork> _unitOfWorkMock = new();
     private readonly IMapper _mapper = MapsterConfigForTesting.GetMapper();
     private readonly SaveImageCommandHandler _sut;
     private readonly Fixture _fixture;
@@ -24,8 +23,7 @@ public class SaveImageCommandHandlerTests
     {
         _fixture = new Fixture();
         _sut = new SaveImageCommandHandler(
-            _userRepositoryMock.Object, 
-            _messageRepositoryMock.Object,
+            _unitOfWorkMock.Object,
             _commandValidator,
             _mapper);
     }
@@ -48,16 +46,19 @@ public class SaveImageCommandHandlerTests
             .With(m => m.ImageUrl, command.ImageUrl)
             .Create();
 
-        _userRepositoryMock
-            .Setup(x => x.UserExists(It.IsAny<string>()))
+        _unitOfWorkMock
+            .Setup(u => 
+                u.Users.UserExists(It.IsAny<string>()))
             .ReturnsAsync(true);
 
-        _userRepositoryMock
-            .Setup(x => x.GetUserById(It.IsAny<string>()))
+        _unitOfWorkMock
+            .Setup(u =>
+                u.Users.GetUserById(It.IsAny<string>()))
             .ReturnsAsync(user);
 
-        _messageRepositoryMock
-            .Setup(x => x.SaveMessage(It.IsAny<Message>()))
+        _unitOfWorkMock
+            .Setup(u => 
+                u.Messages.SaveMessage(It.IsAny<Message>()))
             .ReturnsAsync(message);
         
         //Act
@@ -74,8 +75,9 @@ public class SaveImageCommandHandlerTests
         //Arrange
         var command = _fixture.Create<SaveImageCommand>();
         
-        _userRepositoryMock
-            .Setup(x => x.UserExists(It.IsAny<string>()))
+        _unitOfWorkMock
+            .Setup(u => 
+                u.Users.UserExists(It.IsAny<string>()))
             .ReturnsAsync(false);
         
         //Act
@@ -93,8 +95,9 @@ public class SaveImageCommandHandlerTests
             .With(r => r.ImageUrl, "")
             .Create();
 
-        _userRepositoryMock
-            .Setup(x => x.UserExists(It.IsAny<string>()))
+        _unitOfWorkMock
+            .Setup(u => 
+                u.Users.UserExists(It.IsAny<string>()))
             .ReturnsAsync(true);
 
         //Act

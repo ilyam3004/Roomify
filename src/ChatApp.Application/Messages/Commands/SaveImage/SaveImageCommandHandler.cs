@@ -1,12 +1,12 @@
-using ChatApp.Application.Common.Interfaces.Persistence;
 using ChatApp.Application.Models.Responses;
 using ChatApp.Application.Common.Errors;
+using ChatApp.Application.Common.Interfaces;
 using ChatApp.Domain.Common.Errors;
 using ChatApp.Domain.Entities;
+using FluentValidation;
 using MapsterMapper;
 using ErrorOr;
 using MediatR;
-using FluentValidation;
 
 namespace ChatApp.Application.Messages.Commands.SaveImage;
 
@@ -14,18 +14,15 @@ public class SaveImageCommandHandler :
     IRequestHandler<SaveImageCommand, ErrorOr<MessageResponse>>
 {
     private readonly IValidator<SaveImageCommand> _imageMessageValidator;
-    private readonly IMessageRepository _messageRepository;
-    private readonly IUserRepository _userRepository;
+    private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
 
     public SaveImageCommandHandler(
-        IUserRepository userRepository,
-        IMessageRepository messageRepository,
+        IUnitOfWork unitOfWork,
         IValidator<SaveImageCommand> imageMessageValidator,
         IMapper mapper)
     {
-        _userRepository = userRepository;
-        _messageRepository = messageRepository;
+        _unitOfWork = unitOfWork;
         _imageMessageValidator = imageMessageValidator;
         _mapper = mapper;
     }
@@ -34,19 +31,21 @@ public class SaveImageCommandHandler :
         SaveImageCommand command, 
         CancellationToken cancellationToken)
     {
-        if (!await _userRepository.UserExists(command.UserId))
+        if (!await _unitOfWork.Users.UserExists(command.UserId))
         {
             return Errors.User.UserNotFound;
         }
         
-        var validateResult = await _imageMessageValidator.ValidateAsync(command);
+        var validateResult = await _imageMessageValidator
+            .ValidateAsync(command);
 
         if (!validateResult.IsValid)
         {
             return ErrorConverter.ConvertValidationErrors(validateResult.Errors);
         }
 
-        var dbMessage = await _messageRepository.SaveMessage(new Message
+        var dbMessage = await _unitOfWork.Messages
+            .SaveMessage(new Message
         {
             MessageId = Guid.NewGuid().ToString(),
             RoomId = command.RoomId,
@@ -58,7 +57,8 @@ public class SaveImageCommandHandler :
             ImageUrl = command.ImageUrl
         });
 
-        var user = await _userRepository.GetUserById(dbMessage.UserId);
+        var user = await _unitOfWork.Users
+            .GetUserById(dbMessage.UserId);
             
         return _mapper.Map<MessageResponse>((dbMessage, user));
     }
