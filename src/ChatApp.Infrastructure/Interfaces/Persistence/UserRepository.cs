@@ -7,14 +7,11 @@ namespace ChatApp.Infrastructure.Interfaces.Persistence;
 
 public class UserRepository : IUserRepository
 {
-    private readonly IDbConnection  _connection;
-    private readonly IDbTransaction? _transaction;
+    private readonly IDbConnection _connection;
 
-    public UserRepository(
-        IDbConnection connection, 
-        IDbTransaction transaction)
+    public UserRepository( 
+        IDbConnection connection)
     {
-        _transaction = transaction;
         _connection = connection;
     }
 
@@ -23,7 +20,7 @@ public class UserRepository : IUserRepository
         var query = "INSERT INTO [ChatUser] (UserId, Username, ConnectionId, RoomId, HasLeft, Avatar) " +
                     "VALUES (@UserId, @Username, @ConnectionId, @RoomId, @HasLeft, @Avatar)";
 
-        await _connection.ExecuteAsync(query, user, _transaction);
+        await _connection.ExecuteAsync(query, user);
 
         return user;
     }
@@ -33,7 +30,7 @@ public class UserRepository : IUserRepository
         var query = "SELECT * FROM [ChatUser] WHERE UserId = @userId";
 
         var user = await _connection
-            .QueryFirstOrDefaultAsync<User>(query, new {userId}, _transaction);
+            .QueryFirstOrDefaultAsync<User>(query, new {userId});
 
         return user;
     }
@@ -53,7 +50,7 @@ public class UserRepository : IUserRepository
             RoomName = roomName
         };
 
-        await _connection.ExecuteAsync(query, room, _transaction);
+        await _connection.ExecuteAsync(query, room);
 
         return room;
     }
@@ -63,7 +60,7 @@ public class UserRepository : IUserRepository
         var query = "SELECT * FROM [ChatUser] WHERE RoomId = @RoomId AND HasLeft = 'FALSE'";
 
         IEnumerable<User> users = await _connection
-            .QueryAsync<User>(query, new {RoomId = roomId}, _transaction);
+            .QueryAsync<User>(query, new {RoomId = roomId});
 
         return users.ToList();
     }
@@ -73,7 +70,7 @@ public class UserRepository : IUserRepository
         var query = "SELECT * FROM Room WHERE RoomId = @RoomId";
 
         Room room = await _connection
-            .QueryFirstOrDefaultAsync<Room>(query, new {roomId}, _transaction);
+            .QueryFirstOrDefaultAsync<Room>(query, new {roomId});
         return room;
     }
 
@@ -83,7 +80,7 @@ public class UserRepository : IUserRepository
 
         int count = await _connection
             .QueryFirstOrDefaultAsync<int>(query,
-                new {Username = username, RoomId = roomId}, _transaction);
+                new {Username = username, RoomId = roomId});
 
         return count != 0;
     }
@@ -94,7 +91,7 @@ public class UserRepository : IUserRepository
 
         User? user = await _connection
             .QueryFirstOrDefaultAsync<User>(query, 
-                new {ConnectionId = connectionId}, _transaction);
+                new {ConnectionId = connectionId});
         return user;
     }
 
@@ -104,7 +101,7 @@ public class UserRepository : IUserRepository
         var query = "SELECT COUNT(*) FROM [ChatUser] WHERE UserId = @UserId";
 
         int count = await _connection.QueryFirstOrDefaultAsync<int>(query,
-            new { UserId = userId }, _transaction);
+            new { UserId = userId });
 
         return count != 0;
     }
@@ -114,7 +111,7 @@ public class UserRepository : IUserRepository
         string query = "SELECT COUNT(*) FROM Room WHERE RoomId = @RoomId";
 
         int count = await _connection.QueryFirstOrDefaultAsync<int>(query,
-            new {RoomId = roomId}, _transaction);
+            new {RoomId = roomId});
 
         return count != 0;
     }
@@ -124,7 +121,7 @@ public class UserRepository : IUserRepository
         string query = "UPDATE [ChatUser] SET HasLeft = 'TRUE' WHERE UserId = @UserId";
 
         await _connection.ExecuteAsync(query, 
-            new {UserId = userId}, _transaction);
+            new {UserId = userId});
     }
 
     public async Task<bool> RemoveRoomDataIfEmpty(string roomId, string userId)
@@ -132,7 +129,7 @@ public class UserRepository : IUserRepository
         string query = "SELECT COUNT(*) FROM [ChatUser] WHERE RoomId = @RoomId AND HasLeft = 'FALSE'";
 
         int count = await _connection.QueryFirstOrDefaultAsync<int>(query,
-            new {RoomId = roomId}, _transaction);
+            new {RoomId = roomId});
 
         if (count == 1)
         {
@@ -150,21 +147,21 @@ public class UserRepository : IUserRepository
     {
         var query = "DELETE FROM [ChatUser] WHERE RoomId = @RoomId";
 
-        await _connection.ExecuteAsync(query, new { RoomId = roomId }, _transaction);
+        await _connection.ExecuteAsync(query, new { RoomId = roomId });
     }
     
     public async Task RemoveAllMessagesFromRoom(string roomId)
     {
         string query = "DELETE FROM Message WHERE RoomId = @RoomId";
 
-        await _connection.ExecuteAsync(query, new {RoomId = roomId}, _transaction);
+        await _connection.ExecuteAsync(query, new {RoomId = roomId});
     }
 
     private async Task RemoveRoom(string roomId)
     {
         string query = "DELETE FROM Room WHERE RoomId = @RoomId";
 
-        await _connection.ExecuteAsync(query, new {RoomId = roomId}, _transaction);
+        await _connection.ExecuteAsync(query, new {RoomId = roomId});
     }
 
     private async Task<Room> GetRoomByRoomName(string roomName)
@@ -172,7 +169,7 @@ public class UserRepository : IUserRepository
         var query = "SELECT * FROM Room WHERE RoomName = @RoomName";
 
         Room room = await _connection.QueryFirstOrDefaultAsync<Room>(
-            query, new {RoomName = roomName}, _transaction);
+            query, new {RoomName = roomName});
 
         return room;
     }
@@ -183,7 +180,7 @@ public class UserRepository : IUserRepository
 
         int count = await _connection
             .QueryFirstOrDefaultAsync<int>(query, 
-                new {RoomName = roomName}, _transaction);
+                new {RoomName = roomName});
         
         return count != 0;
     }

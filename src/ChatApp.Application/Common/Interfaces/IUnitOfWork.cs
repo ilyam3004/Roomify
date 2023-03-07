@@ -2,11 +2,8 @@ using ChatApp.Application.Common.Interfaces.Persistence;
 
 namespace ChatApp.Application.Common.Interfaces;
 
-public interface IUnitOfWork : IDisposable
+public interface IUnitOfWork
 {
     IMessageRepository Messages { get; }
-    IUserRepository Users { get; } 
-    void BeginTransaction();
-    void Commit();
-    void Rollback();
+    IUserRepository Users { get; }
 }

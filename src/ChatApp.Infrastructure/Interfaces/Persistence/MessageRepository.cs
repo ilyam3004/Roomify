@@ -13,23 +13,20 @@ namespace ChatApp.Infrastructure.Interfaces.Persistence;
 public class MessageRepository : IMessageRepository
 {
     private readonly IDbConnection _connection;
-    private readonly IDbTransaction _transaction;
     private readonly Cloudinary _cloudinary;
 
     public MessageRepository(
-        IOptions<CloudinarySettings> config, 
         IDbConnection connection,
-        IDbTransaction transaction)
+        IOptions<CloudinarySettings> config)
     {
         var account = new Account(
-            config.Value.CloudName,
-            config.Value.ApiKey,
-            config.Value.ApiSecret);
+             config.Value.CloudName,
+             config.Value.ApiKey,
+             config.Value.ApiSecret);
 
         _cloudinary = new Cloudinary(account);
 
         _connection = connection;
-        _transaction = transaction;
     }
 
     public async Task<ImageUploadResult?> UploadImageToCloudinary(IFormFile image, bool isAvatar)
@@ -69,7 +66,7 @@ public class MessageRepository : IMessageRepository
         string query = "INSERT INTO Message (MessageId, UserId, RoomId, Text, Date, FromUser, isImage, ImageUrl) " +
                        "VALUES (@MessageId, @UserId, @RoomId, @Text, @Date, @FromUser, @isImage, @ImageUrl)";
 
-        await _connection.ExecuteAsync(query, message, _transaction);
+        await _connection.ExecuteAsync(query, message);
 
         return message;
     }
@@ -78,7 +75,7 @@ public class MessageRepository : IMessageRepository
     {
         string query = "DELETE FROM Message WHERE MessageId = @MessageId";
 
-        await _connection.ExecuteAsync(query, new {MessageId = messageId}, _transaction);
+        await _connection.ExecuteAsync(query, new {MessageId = messageId});
     }
 
     public async Task<List<Message>> GetAllRoomMessages(string roomId)
@@ -86,7 +83,7 @@ public class MessageRepository : IMessageRepository
         string query = "SELECT * FROM Message WHERE RoomId = @RoomId";
 
         IEnumerable<Message> messages = await _connection
-            .QueryAsync<Message>(query, new {RoomId = roomId}, _transaction);
+            .QueryAsync<Message>(query, new {RoomId = roomId});
 
         return messages.ToList();
     }
@@ -96,7 +93,7 @@ public class MessageRepository : IMessageRepository
         string query = "SELECT * FROM Message WHERE MessageId = @MessageId";
 
         var message = await _connection.QueryFirstOrDefaultAsync<Message>(
-            query, new {MessageId = messageId}, _transaction);
+            query, new {MessageId = messageId});
 
         return message;
     }
