@@ -1,4 +1,5 @@
 using ChatApp.Application.Common.Interfaces.Persistence;
+using ChatApp.Infrastructure.Queries;
 using ChatApp.Infrastructure.Config;
 using Microsoft.Extensions.Options;
 using Microsoft.AspNetCore.Http;
@@ -29,7 +30,9 @@ public class MessageRepository : IMessageRepository
         _connection = connection;
     }
 
-    public async Task<ImageUploadResult?> UploadImageToCloudinary(IFormFile image, bool isAvatar)
+    public async Task<ImageUploadResult?> UploadImageToCloudinary(
+        IFormFile image, 
+        bool isAvatar)
     {
         await using var stream = image.OpenReadStream();
         var uploadParams = new ImageUploadParams
@@ -63,37 +66,35 @@ public class MessageRepository : IMessageRepository
 
     public async Task<Message> SaveMessage(Message message)
     {
-        string query = "INSERT INTO Message (MessageId, UserId, RoomId, Text, Date, FromUser, isImage, ImageUrl) " +
-                       "VALUES (@MessageId, @UserId, @RoomId, @Text, @Date, @FromUser, @isImage, @ImageUrl)";
-
-        await _connection.ExecuteAsync(query, message);
+        await _connection.ExecuteAsync(
+            MessageQueries.SaveMessage, 
+            message);
 
         return message;
     }
 
     public async Task RemoveMessageById(string messageId)
     {
-        string query = "DELETE FROM Message WHERE MessageId = @MessageId";
-
-        await _connection.ExecuteAsync(query, new {MessageId = messageId});
+        await _connection.ExecuteAsync(
+            MessageQueries.RemoveMessage, 
+            new {MessageId = messageId});
     }
 
     public async Task<List<Message>> GetAllRoomMessages(string roomId)
     {
-        string query = "SELECT * FROM Message WHERE RoomId = @RoomId";
-
         IEnumerable<Message> messages = await _connection
-            .QueryAsync<Message>(query, new {RoomId = roomId});
+            .QueryAsync<Message>(
+                MessageQueries.GetAllRoomMessages, 
+                new {RoomId = roomId});
 
         return messages.ToList();
     }
 
     public async Task<Message?> GetMessageByIdOrNullIfNotExists(string messageId)
     {
-        string query = "SELECT * FROM Message WHERE MessageId = @MessageId";
-
         var message = await _connection.QueryFirstOrDefaultAsync<Message>(
-            query, new {MessageId = messageId});
+            MessageQueries.GetMessageById, 
+            new {MessageId = messageId});
 
         return message;
     }

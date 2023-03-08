@@ -1,7 +1,6 @@
-using ChatApp.Application.Common.Interfaces.Persistence;
+using ChatApp.Application.Common.Interfaces;
 using ChatApp.Application.Models.Responses;
 using ChatApp.Application.Common.Errors;
-using ChatApp.Application.Common.Interfaces;
 using ChatApp.Domain.Common.Errors;
 using ChatApp.Domain.Entities;
 using FluentValidation;
@@ -43,8 +42,8 @@ public class SaveMessageCommandHandler :
         {
             return ErrorConverter.ConvertValidationErrors(validateResult.Errors);
         }
-        
-        var dbMessage = await _unitOfWork.Messages.SaveMessage(new Message
+
+        var messageToSave = new Message()
         {
             MessageId = Guid.NewGuid().ToString(),
             UserId = command.UserId,
@@ -54,7 +53,9 @@ public class SaveMessageCommandHandler :
             FromUser = command.FromUser,
             IsImage = false,
             ImageUrl = ""
-        });
+        };
+        
+        var dbMessage = await _unitOfWork.Messages.SaveMessage(messageToSave);
 
         var user = await _unitOfWork.Users
             .GetUserById(dbMessage.UserId);
