@@ -1,4 +1,5 @@
 using ChatApp.Application.Common.Interfaces.Persistence;
+using ChatApp.Infrastructure.Queries;
 using ChatApp.Domain.Entities;
 using System.Data;
 using Dapper;
@@ -9,28 +10,26 @@ public class UserRepository : IUserRepository
 {
     private readonly IDbConnection _connection;
 
-    public UserRepository( 
-        IDbConnection connection)
+    public UserRepository(IDbConnection connection)
     {
         _connection = connection;
     }
 
     public async Task<User> AddUser(User user)
     {
-        var query = "INSERT INTO [ChatUser] (UserId, Username, ConnectionId, RoomId, HasLeft, Avatar) " +
-                    "VALUES (@UserId, @Username, @ConnectionId, @RoomId, @HasLeft, @Avatar)";
-
-        await _connection.ExecuteAsync(query, user);
+        await _connection.ExecuteAsync(
+            UserQueries.AddUser, 
+            user);
 
         return user;
     }
 
     public async Task<User> GetUserById(string userId)
     {
-        var query = "SELECT * FROM [ChatUser] WHERE UserId = @userId";
-
-        var user = await _connection
-            .QueryFirstOrDefaultAsync<User>(query, new {userId});
+        var user = await _connection.QueryFirstOrDefaultAsync<User>(
+            UserQueries.GetUserById,
+            new { userId }
+        );
 
         return user;
     }
@@ -42,94 +41,70 @@ public class UserRepository : IUserRepository
             return await GetRoomByRoomName(roomName);
         }
 
-        string query = "INSERT INTO Room (RoomId, RoomName) VALUES (@RoomId, @RoomName)";
+        var room = new Room { RoomId = Guid.NewGuid().ToString(), RoomName = roomName };
 
-        var room = new Room
-        {
-            RoomId = Guid.NewGuid().ToString(),
-            RoomName = roomName
-        };
-
-        await _connection.ExecuteAsync(query, room);
+        await _connection.ExecuteAsync(UserQueries.CreateRoom, room);
 
         return room;
     }
 
     public async Task<List<User>> GetRoomUsers(string roomId)
     {
-        var query = "SELECT * FROM [ChatUser] WHERE RoomId = @RoomId AND HasLeft = 'FALSE'";
-
-        IEnumerable<User> users = await _connection
-            .QueryAsync<User>(query, new {RoomId = roomId});
+        IEnumerable<User> users = await _connection.QueryAsync<User>(
+            UserQueries.GetRoomUsers,
+            new { RoomId = roomId }
+        );
 
         return users.ToList();
     }
 
     public async Task<Room> GetRoomById(string roomId)
     {
-        var query = "SELECT * FROM Room WHERE RoomId = @RoomId";
+        Room room = await _connection.QueryFirstOrDefaultAsync<Room>(
+            UserQueries.GetRoomById,
+            new { roomId }
+        );
 
-        Room room = await _connection
-            .QueryFirstOrDefaultAsync<Room>(query, new {roomId});
         return room;
     }
 
     public async Task<bool> UserExists(string username, string roomId)
     {
-        var query = "SELECT COUNT(*) FROM [ChatUser] WHERE Username = @Username AND RoomId = @RoomId AND HasLeft = 'FALSE'";
-
-        int count = await _connection
-            .QueryFirstOrDefaultAsync<int>(query,
-                new {Username = username, RoomId = roomId});
+        int count = await _connection.QueryFirstOrDefaultAsync<int>(
+            UserQueries.CountOfUsersByUsername,
+            new { RoomId = roomId, Username = username }
+        );
 
         return count != 0;
     }
 
     public async Task<User?> GetUserByConnectionIdOrNull(string connectionId)
     {
-        string query = "SELECT * FROM [ChatUser] WHERE ConnectionId = @ConnectionId";
+        User? user = await _connection.QueryFirstOrDefaultAsync<User>(
+            UserQueries.GetUserByConnectionId,
+            new { ConnectionId = connectionId }
+        );
 
-        User? user = await _connection
-            .QueryFirstOrDefaultAsync<User>(query, 
-                new {ConnectionId = connectionId});
         return user;
     }
 
-
     public async Task<bool> UserExists(string userId)
     {
-        var query = "SELECT COUNT(*) FROM [ChatUser] WHERE UserId = @UserId";
-
-        int count = await _connection.QueryFirstOrDefaultAsync<int>(query,
-            new { UserId = userId });
-
-        return count != 0;
-    }
-
-    public async Task<bool> RoomExists(string roomId)
-    {
-        string query = "SELECT COUNT(*) FROM Room WHERE RoomId = @RoomId";
-
-        int count = await _connection.QueryFirstOrDefaultAsync<int>(query,
-            new {RoomId = roomId});
+        int count = await _connection.QueryFirstOrDefaultAsync<int>(
+            UserQueries.CountOfUsersByUserId,
+            new { UserId = userId }
+        );
 
         return count != 0;
     }
 
-    public async Task UpdateUserStatusToHasLeft(string userId)
-    {
-        string query = "UPDATE [ChatUser] SET HasLeft = 'TRUE' WHERE UserId = @UserId";
-
-        await _connection.ExecuteAsync(query, 
-            new {UserId = userId});
-    }
 
     public async Task<bool> RemoveRoomDataIfEmpty(string roomId, string userId)
     {
-        string query = "SELECT COUNT(*) FROM [ChatUser] WHERE RoomId = @RoomId AND HasLeft = 'FALSE'";
-
-        int count = await _connection.QueryFirstOrDefaultAsync<int>(query,
-            new {RoomId = roomId});
+        int count = await _connection.QueryFirstOrDefaultAsync<int>(
+            UserQueries.CountOfUsersInRoom,
+            new { RoomId = roomId }
+        );
 
         if (count == 1)
         {
@@ -138,50 +113,52 @@ public class UserRepository : IUserRepository
             await RemoveRoom(roomId);
             return true;
         }
-        
+
         await UpdateUserStatusToHasLeft(userId);
         return false;
     }
 
-    private async Task RemoveAllUsersFromRoom(string roomId)
+    private async Task UpdateUserStatusToHasLeft(string userId)
     {
-        var query = "DELETE FROM [ChatUser] WHERE RoomId = @RoomId";
-
-        await _connection.ExecuteAsync(query, new { RoomId = roomId });
+        await _connection.ExecuteAsync(UserQueries.UpdateUserStatus, new { UserId = userId });
     }
     
-    public async Task RemoveAllMessagesFromRoom(string roomId)
+    private async Task RemoveAllUsersFromRoom(string roomId)
     {
-        string query = "DELETE FROM Message WHERE RoomId = @RoomId";
+        await _connection.ExecuteAsync(
+            UserQueries.RemoveAllUsersFromRoom, 
+            new { RoomId = roomId });
+    }
 
-        await _connection.ExecuteAsync(query, new {RoomId = roomId});
+    private async Task RemoveAllMessagesFromRoom(string roomId)
+    {
+        await _connection.ExecuteAsync(
+            MessageQueries.RemoveAllMessagesFromRoom, 
+            new { RoomId = roomId });
     }
 
     private async Task RemoveRoom(string roomId)
     {
-        string query = "DELETE FROM Room WHERE RoomId = @RoomId";
-
-        await _connection.ExecuteAsync(query, new {RoomId = roomId});
+        await _connection.ExecuteAsync(
+            UserQueries.RemoveRoom, 
+            new { RoomId = roomId });
     }
 
     private async Task<Room> GetRoomByRoomName(string roomName)
     {
-        var query = "SELECT * FROM Room WHERE RoomName = @RoomName";
-
         Room room = await _connection.QueryFirstOrDefaultAsync<Room>(
-            query, new {RoomName = roomName});
+            UserQueries.GetRoomByRoomName,
+            new { RoomName = roomName });
 
         return room;
     }
 
     private async Task<bool> RoomExistsByRoomName(string roomName)
     {
-        var query = "SELECT COUNT(*) FROM Room WHERE RoomName = @RoomName";
+        int count = await _connection.QueryFirstOrDefaultAsync<int>(
+            UserQueries.CountOfRooms,
+            new { RoomName = roomName });
 
-        int count = await _connection
-            .QueryFirstOrDefaultAsync<int>(query, 
-                new {RoomName = roomName});
-        
         return count != 0;
     }
 }
