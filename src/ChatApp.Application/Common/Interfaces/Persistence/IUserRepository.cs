@@ -11,7 +11,6 @@ public interface IUserRepository
     Task<List<User>> GetRoomUsers(string roomId);
     Task<bool> UserExists(string username, string roomName);
     Task<bool> UserExists(string userId);
-    Task<bool> RoomExists(string roomId);
     Task<bool> RemoveRoomDataIfEmpty(string roomId, string userId);
     Task<User?> GetUserByConnectionIdOrNull(string connectionId);
 }
