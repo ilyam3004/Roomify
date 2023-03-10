@@ -30,6 +30,8 @@ tests/ChatApp.Infrastructure.Tests/obj/
 .vs/
 .idea/
 
+src/ChatApp.Api/appsettings.json
+
 ChatApp.sln.DotSettings.user
 
 
