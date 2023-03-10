@@ -32,6 +32,8 @@ tests/ChatApp.Infrastructure.Tests/obj/
 
 ChatApp.sln.DotSettings.user
 
+src/ChatApp.Api/appsettings.json
+
 
 
 
