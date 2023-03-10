@@ -49,8 +49,10 @@ public class ChatHub : Hub
         ErrorOr<UserResponse> result = await _mediator.Send(comamnd);
 
         await result.Match(
-            async onValue => await SendDataToRoomAboutUserLeaving(onValue),
-            async onError => await SendRemovingErrorToClientIfErrorTypeIsNotFound(onError[0])
+            async onValue => 
+                    await SendDataToRoomAboutUserLeaving(onValue),
+            async onError => 
+                    await SendRemovingErrorToClientIfErrorTypeIsNotFound(onError[0])
         );
     }
 
@@ -113,7 +115,9 @@ public class ChatHub : Hub
         var query = new GetRoomMessagesQuery(roomId);
         List<MessageResponse> result = await _mediator.Send(query);
 
-        await Clients.Client(Context.ConnectionId).SendAsync("ReceiveRoomMessages", result);
+        await Clients
+                .Client(Context.ConnectionId)
+                .SendAsync("ReceiveRoomMessages", result);
     }
 
     public async Task SendImageToRoom(SendImageRequest request)
@@ -123,11 +127,13 @@ public class ChatHub : Hub
 
         await result.Match(
             async onValue =>
-                await Clients.Group(onValue.RoomId).SendAsync("ReceiveMessage", onValue),
+                await Clients
+                        .Group(onValue.RoomId)
+                        .SendAsync("ReceiveMessage", onValue),
             async onError =>
                 await Clients
-                    .Client(Context.ConnectionId)
-                    .SendAsync("ReceiveError", GenerateProblem(onError))
+                        .Client(Context.ConnectionId)
+                        .SendAsync("ReceiveError", GenerateProblem(onError))
         );
     }
 
@@ -141,8 +147,8 @@ public class ChatHub : Hub
                 await Clients.Group(onValue.RoomId).SendAsync("ReceiveMessage", onValue),
             async onError =>
                 await Clients
-                    .Client(Context.ConnectionId)
-                    .SendAsync("ReceiveError", GenerateProblem(onError))
+                        .Client(Context.ConnectionId)
+                        .SendAsync("ReceiveError", GenerateProblem(onError))
         );
     }
 
@@ -150,7 +156,9 @@ public class ChatHub : Hub
     {
         if (error.Type != ErrorType.Unexpected)
         {
-            await Clients.Client(Context.ConnectionId).SendAsync("ReceiveError", error);
+            await Clients
+                    .Client(Context.ConnectionId)
+                    .SendAsync("ReceiveError", error);
         }
     }
 
@@ -160,12 +168,16 @@ public class ChatHub : Hub
 
         List<UserResponse> result = await _mediator.Send(query);
 
-        await Clients.Group(roomId).SendAsync("ReceiveUserList", result);
+        await Clients
+                .Group(roomId)
+                .SendAsync("ReceiveUserList", result);
     }
 
     private async Task SendUserData(UserResponse response)
     {
-        await Clients.Client(Context.ConnectionId).SendAsync("ReceiveUserData", response);
+        await Clients
+                .Client(Context.ConnectionId)
+                .SendAsync("ReceiveUserData", response);
     }
 
     private ProblemDetails GenerateProblem(List<Error> errors)
