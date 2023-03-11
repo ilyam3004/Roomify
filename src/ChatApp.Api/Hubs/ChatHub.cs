@@ -44,9 +44,9 @@ public class ChatHub : Hub
 
     public override async Task OnDisconnectedAsync(Exception? exception)
     {
-        var comamnd = new LeaveRoomCommand(Context.ConnectionId);
+        var command = new LeaveRoomCommand(Context.ConnectionId);
 
-        ErrorOr<UserResponse> result = await _mediator.Send(comamnd);
+        ErrorOr<UserResponse> result = await _mediator.Send(command);
 
         await result.Match(
             async onValue => 
