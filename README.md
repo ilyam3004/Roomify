@@ -1,7 +1,7 @@
 # Chat Application following Clean Architecture and CQRS patterns
----
+
 This is a chat application that follows the Clean Architecture and CQRS pattern. The application is written in C# using ASP.NET Core 7.0 and SignalR. You can use this application as a template for your own ASP.NET Core Web API's following the principles of Clean Architecture. It is a server part of the chat application. The client part is [here](https://github.com/ilyam3004/ChatApp).
-### Technologies
+## Technologies
 
 ---
 - [ASP.NET 7](https://dotnet.microsoft.com/en-us/apps/aspnet)
@@ -15,7 +15,7 @@ This is a chat application that follows the Clean Architecture and CQRS pattern.
 - [Moq](https://github.com/moq/moq4)
 - [AutoFixture](https://github.com/AutoFixture/AutoFixture)
 
-### Overview
+## Overview
 ---
 
 ![](/docs/img/clean-architecture-model.jpg "Clean Architecture model")
@@ -35,7 +35,7 @@ The Infrastructure layer includes classes that allow the system to access extern
 Finally, the Presentation layer is an ASP.NET Web API which gives us an opportunity to build SPA applications, Mobile apps or Desktop clients and so far. This layer is responsible for all user interface logic and depends on the Application layer.
 
 
-### Database configuration
+## Database configuration
 ---
 This application is configured to use Azure SQL Server database in production. If you would like to use this application you need to prepare SQL Server or Azure SQL Server database by 
 
@@ -44,12 +44,12 @@ This application is configured to use Azure SQL Server database in production. I
 Verify that the DefaultConnection connection string within appsettings.json points to a valid SQL Server instance.
 
 When you run the application the database will be automatically created (if necessary) and the latest migrations will be applied.
-### CQRS pattern
+## CQRS pattern
 ---
 CQRS (Command Query Responsibility Segregation) is a software design pattern that separates the operations that modify state from those that read state in a system. This separation allows for different optimizations and scaling strategies for the two types of operations. In a CQRS architecture, commands represent actions that change the state of the system, while queries represent requests for information about the system's current state. By separating these concerns, a CQRS system can be optimized for both high write throughput and fast query performance. However, implementing a CQRS architecture can be complex and may require significant changes to existing systems.
 
 ![](/docs/img/cqrs-model.jpg "CQRS model")
 
-### Support
+## Support
 ---
 If you are having problems, please let me know by [raising a new issue](https://github.com/ilyam3004/ChatAppServer/issues).
