@@ -99,7 +99,7 @@ http://localhost:{host}/chatHub
     "Avatar": "link_to_avatar"
 }
 ```
-After opening connection you can invoke methods of [ChatHub](/src/ChatApp.Api/Hubs/ChatHub.cs) from the client side. An example of client application which show all functionality of this server is [here](https://github.com/ilyam3004/ChatApp).
+After opening connection you can invoke methods of [ChatHub](/src/ChatApp.Api/Hubs/ChatHub.cs) from the client side. An example of client application which show all functionality of this server is [here](https://chat-app-psi-ruby.vercel.app/lobby).
 
 ## Support
 
