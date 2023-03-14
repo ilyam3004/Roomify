@@ -1,12 +1,12 @@
 # Roomify server following Clean Architecture, CQRS and Mediator patterns
 
-Roomify server is a simple server that was build following Clean Architecture, CQRS and Mediator patters. The application is written in C# using ASP.NET Core 7.0 and SignalR. You can use this application as a template for your own ASP.NET Core Web API's following the principles of Clean Architecture. It is a server part of the chat application. The client part is [here](https://github.com/ilyam3004/Roomify).
-
 <p align="center">
     <img src="https://img.shields.io/github/v/release/ilyam3004/Roomify-Server"/>
     <img src="https://img.shields.io/github/actions/workflow/status/ilyam3004/Roomify-Server/main.yml"/>
     <img src="https://img.shields.io/github/license/ilyam3004/Roomify-Server"/>
 </p> 
+
+Roomify server is a simple server that was build following Clean Architecture, CQRS and Mediator patters. The application is written in C# using ASP.NET Core 7.0 and SignalR. You can use this application as a template for your own ASP.NET Core Web API's following the principles of Clean Architecture. It is a server part of the chat application. The client part is [here](https://github.com/ilyam3004/Roomify).
 
 ## Technologies
 
@@ -96,7 +96,7 @@ dotnet run --project src/ChatApp.Api
 ```
 
 Then, to open the websocket connection, simply make this request from your client application or testing platform with the request body containing the user's name,  chat room name and if you want you can add avatar link:
-```http
+```js
 http://localhost:{host}/chatHub
 ```
 ```json
