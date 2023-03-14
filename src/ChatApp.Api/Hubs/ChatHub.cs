@@ -30,24 +30,30 @@ public class ChatHub : Hub
     public async Task JoinRoom(JoinRoomRequest request)
     {
         var command = _mapper.Map<JoinRoomCommand>((request, Context.ConnectionId));
-            
+
         ErrorOr<UserResponse> result = await _mediator.Send(command);
 
         await result.Match(
             async onValue => await SendDataToRoomAboutAddingUser(onValue),
-            async onError => await Clients.Client(Context.ConnectionId)
-                .SendAsync("ReceiveError", GenerateProblem(result.Errors)));
+            async onError =>
+                await Clients
+                    .Client(Context.ConnectionId)
+                    .SendAsync("ReceiveError", GenerateProblem(result.Errors))
+        );
     }
 
     public override async Task OnDisconnectedAsync(Exception? exception)
     {
-        var comamnd = new LeaveRoomCommand(Context.ConnectionId);
-        
-        ErrorOr<UserResponse> result = await _mediator.Send(comamnd);
+        var command = new LeaveRoomCommand(Context.ConnectionId);
+
+        ErrorOr<UserResponse> result = await _mediator.Send(command);
 
         await result.Match(
-            async onValue => await SendDataToRoomAboutUserLeaving(onValue),
-            async onError => await SendRemovingErrorToClientIfErrorTypeIsNotFound(onError[0]));
+            async onValue => 
+                    await SendDataToRoomAboutUserLeaving(onValue),
+            async onError => 
+                    await SendRemovingErrorToClientIfErrorTypeIsNotFound(onError[0])
+        );
     }
 
     private async Task SendDataToRoomAboutAddingUser(UserResponse response)
@@ -55,40 +61,53 @@ public class ChatHub : Hub
         await Groups.AddToGroupAsync(Context.ConnectionId, response.RoomId);
         await SendUserData(response);
         await SendUserList(response.RoomId);
-        await SendMessageToRoom(new SendMessageRequest(
-            response.UserId,
-            response.Username,
-            response.RoomId,
-            $"User {response.Username} has joined the room",
-            false));
+        await SendMessageToRoom(
+            new SendMessageRequest(
+                response.UserId,
+                response.Username,
+                response.RoomId,
+                $"User {response.Username} has joined the room",
+                false
+            )
+        );
         await SendAllRoomMessages(response.RoomId);
     }
 
     private async Task SendDataToRoomAboutUserLeaving(UserResponse response)
     {
         await SendUserList(response.RoomId);
-        await SendMessageToRoom(new SendMessageRequest(
-            response.UserId,
-            response.Username,
-            response.RoomId,
-            $"User {response.Username} has left the room",
-            false));
+        await SendMessageToRoom(
+            new SendMessageRequest(
+                response.UserId,
+                response.Username,
+                response.RoomId,
+                $"User {response.Username} has left the room",
+                false
+            )
+        );
     }
-    
+
     public async Task SendUserMessage(string message)
     {
         var query = new GetUserByConnIdQuery(Context.ConnectionId);
         ErrorOr<UserResponse> result = await _mediator.Send(query);
 
         await result.Match(
-            async onValue => await SendMessageToRoom(new SendMessageRequest(
-                onValue.UserId,
-                onValue.Username,
-                onValue.RoomId,
-                message,
-                true)),
-            async onError => await Clients.Client(Context.ConnectionId)
-                .SendAsync("ReceiveError", GenerateProblem(onError)));
+            async onValue =>
+                await SendMessageToRoom(
+                    new SendMessageRequest(
+                        onValue.UserId,
+                        onValue.Username,
+                        onValue.RoomId,
+                        message,
+                        true
+                    )
+                ),
+            async onError =>
+                await Clients
+                    .Client(Context.ConnectionId)
+                    .SendAsync("ReceiveError", GenerateProblem(onError))
+        );
     }
 
     public async Task SendAllRoomMessages(string roomId)
@@ -96,20 +115,26 @@ public class ChatHub : Hub
         var query = new GetRoomMessagesQuery(roomId);
         List<MessageResponse> result = await _mediator.Send(query);
 
-        await Clients.Client(Context.ConnectionId)
-            .SendAsync("ReceiveRoomMessages", result);
+        await Clients
+                .Client(Context.ConnectionId)
+                .SendAsync("ReceiveRoomMessages", result);
     }
 
     public async Task SendImageToRoom(SendImageRequest request)
     {
         var command = _mapper.Map<SaveImageCommand>(request);
         ErrorOr<MessageResponse> result = await _mediator.Send(command);
-        
+
         await result.Match(
-            async onValue => await Clients.Group(onValue.RoomId)
-                .SendAsync("ReceiveMessage", onValue),
-            async onError => await Clients.Client(Context.ConnectionId)
-                .SendAsync("ReceiveError", GenerateProblem(onError)));
+            async onValue =>
+                await Clients
+                        .Group(onValue.RoomId)
+                        .SendAsync("ReceiveMessage", onValue),
+            async onError =>
+                await Clients
+                        .Client(Context.ConnectionId)
+                        .SendAsync("ReceiveError", GenerateProblem(onError))
+        );
     }
 
     private async Task SendMessageToRoom(SendMessageRequest request)
@@ -118,18 +143,22 @@ public class ChatHub : Hub
         ErrorOr<MessageResponse> result = await _mediator.Send(command);
 
         await result.Match(
-            async onValue => await Clients.Group(onValue.RoomId)
-                .SendAsync("ReceiveMessage", onValue),
-            async onError => await Clients.Client(Context.ConnectionId)
-                .SendAsync("ReceiveError", GenerateProblem(onError)));
+            async onValue =>
+                await Clients.Group(onValue.RoomId).SendAsync("ReceiveMessage", onValue),
+            async onError =>
+                await Clients
+                        .Client(Context.ConnectionId)
+                        .SendAsync("ReceiveError", GenerateProblem(onError))
+        );
     }
 
     private async Task SendRemovingErrorToClientIfErrorTypeIsNotFound(Error error)
     {
         if (error.Type != ErrorType.Unexpected)
         {
-            await Clients.Client(Context.ConnectionId)
-                .SendAsync("ReceiveError", error);
+            await Clients
+                    .Client(Context.ConnectionId)
+                    .SendAsync("ReceiveError", error);
         }
     }
 
@@ -139,14 +168,16 @@ public class ChatHub : Hub
 
         List<UserResponse> result = await _mediator.Send(query);
 
-        await Clients.Group(roomId)
-            .SendAsync("ReceiveUserList", result);
+        await Clients
+                .Group(roomId)
+                .SendAsync("ReceiveUserList", result);
     }
 
     private async Task SendUserData(UserResponse response)
     {
-        await Clients.Client(Context.ConnectionId)
-            .SendAsync("ReceiveUserData", response);
+        await Clients
+                .Client(Context.ConnectionId)
+                .SendAsync("ReceiveUserData", response);
     }
 
     private ProblemDetails GenerateProblem(List<Error> errors)
@@ -194,9 +225,7 @@ public class ChatHub : Hub
 
         foreach (var error in errors)
         {
-            modelStateDictionary.AddModelError(
-                error.Code,
-                error.Description);
+            modelStateDictionary.AddModelError(error.Code, error.Description);
         }
 
         return new ValidationProblemDetails(modelStateDictionary)
