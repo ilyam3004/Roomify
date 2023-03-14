@@ -18,7 +18,7 @@ public static class UserQueries
                                                          "WHERE UserId = @UserId";
 
     public static readonly string CountOfUsersByUsername = "SELECT COUNT(*) FROM [ChatUser] " +
-                                                           "WHERE RoomId = @RoomId AND Username = @Username";
+                                                           "WHERE RoomId = @RoomId AND Username = @Username AND HasLeft = 'FALSE'";
 
     public static readonly string UpdateUserStatus = "UPDATE [ChatUser] " +
                                                      "SET HasLeft = 'TRUE' WHERE UserId = @UserId";
