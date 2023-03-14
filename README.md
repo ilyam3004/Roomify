@@ -1,6 +1,13 @@
 # Roomify server following Clean Architecture, CQRS and Mediator patterns
 
-Roomify server is a simple server that was build following Clean Architecture, CQRS and Mediator patters. The application is written in C# using ASP.NET Core 7.0 and SignalR. You can use this application as a template for your own ASP.NET Core Web API's following the principles of Clean Architecture. It is a server part of the chat application. The client part is [here](https://github.com/ilyam3004/ChatApp).
+Roomify server is a simple server that was build following Clean Architecture, CQRS and Mediator patters. The application is written in C# using ASP.NET Core 7.0 and SignalR. You can use this application as a template for your own ASP.NET Core Web API's following the principles of Clean Architecture. It is a server part of the chat application. The client part is [here](https://github.com/ilyam3004/Roomify).
+
+<p align="center">
+    <img src="https://img.shields.io/github/v/release/ilyam3004/Roomify-Server"/>
+    <img src="https://img.shields.io/github/actions/workflow/status/ilyam3004/Roomify-Server/main.yml"/>
+    <img src="https://img.shields.io/github/license/ilyam3004/Roomify-Server"/>
+</p> 
+
 ## Technologies
 
 - [ASP.NET 7](https://dotnet.microsoft.com/en-us/apps/aspnet)
@@ -99,8 +106,12 @@ http://localhost:{host}/chatHub
     "Avatar": "link_to_avatar"
 }
 ```
-After opening connection you can invoke methods of [ChatHub](/src/ChatApp.Api/Hubs/ChatHub.cs) from the client side. An example of client application which show all functionality of this server is [here](https://chat-app-psi-ruby.vercel.app/lobby).
+After opening connection you can invoke methods of [ChatHub](/src/ChatApp.Api/Hubs/ChatHub.cs) from the client side. An example of client application which show all functionality of this server is [here](https://www.rmify.com/lobby).
 
 ## Support
 
-If you are having problems, please let me know by [raising a new issue](https://github.com/ilyam3004/ChatAppServer/issues).
+If you are having problems, please let me know by [raising a new issue](https://github.com/ilyam3004/Roomify-Server/issues).
+
+## License
+
+This project is licensed with the [MIT license](LICENSE).
