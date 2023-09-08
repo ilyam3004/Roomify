@@ -1,0 +1,93 @@
+.lobby-file-input {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  margin: 10px 0px;
+  cursor: pointer;
+  text-decoration: none;
+  text-align: start;
+  opacity: 1;
+  transition: 0.2s;
+  white-space: nowrap;
+  border-radius: 5px;
+  border: 1px #626262 solid;
+  font-size: 14px;
+  padding: 15px 20px;
+  color: #afafaf;
+  background-color: #ffffff;
+}
+
+.lobby-file-input input[type=file] {
+  position: absolute;
+  z-index: -1;
+  opacity: 0;
+  display: block;
+  width: 0;
+  height: 0;
+}
+
+.lobby-file-input:hover {
+  opacity: 0.8;
+}
+.lobby-file-input:active {
+  background-color: #84d0f0;
+}
+
+.chat-file-input {
+  display: flex;
+  flex-direction: row;
+  margin: 0 10px 0 10px;
+  cursor: pointer;
+  text-decoration: none;
+  text-align: center;
+  opacity: 1;
+  transition: 0.2s;
+  white-space: nowrap;
+  border-radius: 20px;
+  background-color: #ffffff;
+  border: 1px #BFBEBEFF solid;
+  font-size: 15px;
+  padding: 10px 10px;
+  color: #BFBEBEFF;
+  background-color: #ffffff;
+}
+
+.chat-file-input input[type=file] {
+  position: absolute;
+  z-index: -1;
+  opacity: 0;
+  display: block;
+  width: 0;
+  height: 0;
+}
+
+.chat-file-input:hover {
+  opacity: 0.6;
+}
+.chat-file-input:active {
+  background-color: #afafaf;
+}
+
+.remove-button {
+  border: none;
+  color: #bbbbbb;
+  font-weight: bold;
+  cursor: pointer;
+  font-size: 18px;
+  opacity: 0;
+  cursor: pointer;
+  background-color: #dcdcdc;
+}
+
+.chat-file-input .remove-button{
+  opacity: 1;
+  margin-left: 5px;
+  background-color: #ffffff;
+  border-radius: 2px;
+  color: #BFBEBEFF;
+  font-size: 16px;
+}
+
+.lobby-file-input:hover .remove-button {
+  opacity: 1;
+}
