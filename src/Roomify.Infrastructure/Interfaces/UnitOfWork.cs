@@ -1,5 +1,4 @@
 using System.Data;
-using ChatApp.Infrastructure.Interfaces.Persistence;
 using Microsoft.Extensions.Options;
 using Roomify.Application.Common.Interfaces;
 using Roomify.Application.Common.Interfaces.Persistence;

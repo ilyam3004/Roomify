@@ -4,7 +4,7 @@ using Roomify.Application.Common.Interfaces.Persistence;
 using Roomify.Domain.Entities;
 using Roomify.Infrastructure.Queries;
 
-namespace ChatApp.Infrastructure.Interfaces.Persistence;
+namespace Roomify.Infrastructure.Interfaces.Persistence;
 
 public class UserRepository : IUserRepository
 {

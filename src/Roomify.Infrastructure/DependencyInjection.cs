@@ -1,6 +1,4 @@
 using System.Data;
-using ChatApp.Infrastructure.Interfaces;
-using ChatApp.Infrastructure.Interfaces.Persistence;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Configuration;
