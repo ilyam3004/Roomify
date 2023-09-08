@@ -1,4 +1,4 @@
-# Roomify server following Clean Architecture, CQRS and Mediator patterns
+# Roomify
 
 <p align="center">
     <img src="https://img.shields.io/github/v/release/ilyam3004/Roomify-Server"/>
@@ -6,7 +6,7 @@
     <img src="https://img.shields.io/github/license/ilyam3004/Roomify-Server"/>
 </p> 
 
-Roomify server is a simple server that was build following Clean Architecture, CQRS and Mediator patters. The application is written in C# using ASP.NET Core 7.0 and SignalR. You can use this application as a template for your own ASP.NET Core Web API's following the principles of Clean Architecture. It is a server part of the chat application. The client part is [here](https://github.com/ilyam3004/Roomify).
+Roomify is a simple application that was build following Clean Architecture, CQRS and Mediator patters. The application is written in C# using ASP.NET Core 7.0 and SignalR. You can use this application as a template for your own ASP.NET Core Web API's following the principles of Clean Architecture. The client part is [here](https://github.com/ilyam3004/Roomify/tree/main/src/Roomify.Web).
 
 ## Technologies
 
